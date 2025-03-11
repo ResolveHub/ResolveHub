@@ -108,7 +108,7 @@
     </rect>
    </property>
    <property name="plainText">
-    <string>Haven't an account? </string>
+    <string>No account?</string>
    </property>
   </widget>
  </widget>

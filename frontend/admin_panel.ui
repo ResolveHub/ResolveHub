@@ -7,7 +7,7 @@
                 <x>100</x>
                 <y>100</y>
                 <width>400</width>
-                <height>300</height>
+                <height>350</height>
             </rect>
         </property>
         <property name="windowTitle">
@@ -80,6 +80,26 @@
                         </property>
                     </widget>
                 </item>
+                
+                <!-- New Section for Deleting Authority -->
+                <item>
+                    <widget class="QLabel" name="label_4">
+                        <property name="text">
+                            <string>Enter User ID to Delete:</string>
+                        </property>
+                    </widget>
+                </item>
+                <item>
+                    <widget class="QLineEdit" name="user_id_input"/>
+                </item>
+                <item>
+                    <widget class="QPushButton" name="delete_button">
+                        <property name="text">
+                            <string>Delete Authority</string>
+                        </property>
+                    </widget>
+                </item>
+                
             </layout>
         </widget>
     </widget>

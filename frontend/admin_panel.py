@@ -1,6 +1,8 @@
 import sys
 from PyQt5 import QtWidgets, uic
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 import sqlite3
+import requests
 
 class AdminPanel(QtWidgets.QMainWindow):
     def __init__(self):
@@ -10,6 +12,9 @@ class AdminPanel(QtWidgets.QMainWindow):
         # Button connections
         self.assign_button.clicked.connect(self.assign_authority)
         self.load_users()
+
+        self.delete_button.clicked.connect(self.delete_authority)
+
 
     def load_users(self):
         """ Load users from the database into the dropdown list. """
@@ -49,6 +54,39 @@ class AdminPanel(QtWidgets.QMainWindow):
         conn.close()
 
         QtWidgets.QMessageBox.information(self, "Success", "Authority assigned successfully!")
+
+
+    def delete_authority(self):
+        """ Delete authority for the selected user ID. """
+        user_id = self.user_id_input.text().strip()
+
+        if not user_id:
+            QtWidgets.QMessageBox.warning(self, "Error", "Please enter a User ID!")
+            return
+        
+        try:
+            user_id = int(user_id)  # Convert to integer
+        except ValueError:
+            QtWidgets.QMessageBox.warning(self, "Error", "Invalid User ID format!")
+            return
+
+
+        conn = sqlite3.connect("../db.sqlite3")
+        cursor = conn.cursor()
+
+        # Check if the user has an assigned authority
+        cursor.execute("SELECT id FROM admin_panel_authority WHERE user_id=?", (user_id,))
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute("DELETE FROM admin_panel_authority WHERE user_id=?", (user_id,))
+            conn.commit()
+            QtWidgets.QMessageBox.information(self, "Success", "Authority deleted successfully!")
+        else:
+            QtWidgets.QMessageBox.warning(self, "Error", "No authority found for the given User ID!")
+
+        conn.close()
+
 
 # Run the application
 if __name__ == "__main__":

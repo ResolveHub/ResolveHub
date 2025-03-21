@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'auth_app',
+    "admin_panel",
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

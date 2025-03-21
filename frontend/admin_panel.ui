@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>AdminPanel</class>
+    <widget class="QMainWindow" name="AdminPanel">
+        <property name="geometry">
+            <rect>
+                <x>100</x>
+                <y>100</y>
+                <width>400</width>
+                <height>300</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>Admin Panel</string>
+        </property>
+        <widget class="QWidget" name="centralwidget">
+            <layout class="QVBoxLayout" name="verticalLayout">
+                <item>
+                    <widget class="QLabel" name="label">
+                        <property name="text">
+                            <string>Select User:</string>
+                        </property>
+                    </widget>
+                </item>
+                <item>
+                    <widget class="QComboBox" name="user_dropdown"/>
+                </item>
+                <item>
+                    <widget class="QLabel" name="label_2">
+                        <property name="text">
+                            <string>Select Role:</string>
+                        </property>
+                    </widget>
+                </item>
+                <item>
+                    <widget class="QComboBox" name="role_dropdown">
+                        <item>
+                            <property name="text">
+                                <string>Maintenance</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>Transport</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>Mess</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>Other</string>
+                            </property>
+                        </item>
+                    </widget>
+                </item>
+                <item>
+                    <widget class="QLabel" name="label_3">
+                        <property name="text">
+                            <string>Set Priority:</string>
+                        </property>
+                    </widget>
+                </item>
+                <item>
+                    <widget class="QSpinBox" name="priority_spinbox">
+                        <property name="minimum">
+                            <number>0</number>
+                        </property>
+                        <property name="maximum">
+                            <number>10</number>
+                        </property>
+                    </widget>
+                </item>
+                <item>
+                    <widget class="QPushButton" name="assign_button">
+                        <property name="text">
+                            <string>Assign Authority</string>
+                        </property>
+                    </widget>
+                </item>
+            </layout>
+        </widget>
+    </widget>
+</ui>

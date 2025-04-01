@@ -32,7 +32,7 @@ AUTH_USER_MODEL = 'auth_app.User'
 # Application definition
 
 INSTALLED_APPS = [
-     'django.contrib.admin',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'auth_app',
     "admin_panel",
+    'complaints'
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

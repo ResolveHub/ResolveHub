@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>ComplaintApp</class>
+    <widget class="QMainWindow" name="ComplaintApp">
+        <property name="geometry">
+            <rect>
+                <x>100</x>
+                <y>100</y>
+                <width>400</width>
+                <height>300</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>Complaint Management</string>
+        </property>
+        <widget class="QWidget" name="centralwidget">
+            <layout class="QVBoxLayout" name="verticalLayout">
+                <item>
+                    <widget class="QLabel" name="title_label">
+                        <property name="text">
+                            <string>Complaint Title:</string>
+                        </property>
+                    </widget>
+                </item>
+                <item>
+                    <widget class="QLineEdit" name="title_input"/>
+                </item>
+                <item>
+                    <widget class="QLabel" name="description_label">
+                        <property name="text">
+                            <string>Complaint Description:</string>
+                        </property>
+                    </widget>
+                </item>
+                <item>
+                    <widget class="QTextEdit" name="description_input"/>
+                </item>
+                <item>
+                    <widget class="QLabel" name="type_label">
+                        <property name="text">
+                            <string>Complaint Type:</string>
+                        </property>
+                    </widget>
+                </item>
+                <item>
+                    <widget class="QComboBox" name="complaint_type_input">
+                        <item>
+                            <property name="text">
+                                <string>General</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>Technical</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>Billing</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>Maintenance</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>Mess</string>
+                            </property>
+                        </item>
+                        <item>
+                            <property name="text">
+                                <string>Safety</string>
+                            </property>
+                        </item>
+                    </widget>
+                </item>
+                <item>
+                    <widget class="QPushButton" name="submit_button">
+                        <property name="text">
+                            <string>Submit Complaint</string>
+                        </property>
+                    </widget>
+                </item>
+            </layout>
+        </widget>
+    </widget>
+</ui>

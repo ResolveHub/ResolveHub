@@ -9,8 +9,11 @@ from PyQt5.QtWidgets import (
 BASE_URL = "http://127.0.0.1:8000/complaints/"
 
 class ComplaintApp(QMainWindow):
-    def __init__(self):
+    def __init__(self, user_id, token):
         super().__init__()
+        self.user_id = user_id
+        self.token = token
+
 
         self.setWindowTitle("Complaint Management System")
         self.setGeometry(100, 100, 800, 600)
@@ -46,6 +49,11 @@ class ComplaintApp(QMainWindow):
 
     def load_complaints(self):
         """Fetch complaints from Django backend"""
+        headers = {
+            "Authorization": f"Bearer {self.token}"
+        }
+        response = requests.get(BASE_URL, headers=headers)
+
         response = requests.get(BASE_URL)
         if response.status_code == 200:
             complaints = response.json()
@@ -61,7 +69,10 @@ class ComplaintApp(QMainWindow):
     def search_complaints(self):
         """Search complaints by title"""
         query = self.search_bar.text()
-        response = requests.get(BASE_URL + f"?q={query}")
+        headers = {
+            "Authorization": f"Bearer {self.token}"
+        }
+        response = requests.get(BASE_URL + f"?q={query}",headers=headers)
 
         if response.status_code == 200:
             complaints = response.json()
@@ -106,20 +117,25 @@ class ComplaintApp(QMainWindow):
         data = {
             "title": self.title_input.text(),
             "description": self.description_input.toPlainText(),
-            "type": self.type_dropdown.currentText(),
-            "user": 1  # Example user ID, replace with authentication
+            "type": self.type_dropdown.currentText().lower(),
+            "user": self.user_id # Example user ID, replace with authentication
         }
+        headers = {}
+        if self.token:
+            headers["Authorization"] = f"Token {self.token}"
 
-        response = requests.post(BASE_URL, json=data)
+        response = requests.post(BASE_URL, json=data, headers=headers)
+
         if response.status_code == 201:
             print("Complaint submitted successfully.")
             self.create_window.close()
             self.load_complaints()
         else:
-            print("Error submitting complaint")
-
+            print("Error submitting complaint:", response.json())
+            
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = ComplaintApp()
+    # TEMP VALUES JUST FOR TESTING
+    window = ComplaintApp(user_id=1, token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQzODQ1NDUxLCJpYXQiOjE3NDM4NDUxNTEsImp0aSI6ImY1MjNjMDYzZTQ1MjQwYTI5MTQzYjRhYmRlYTUxZDc2IiwidXNlcl9pZCI6NH0.Tom_do9rzuRihfBs6fcSJwvmwW2GEg_x5u7l90dwzb8")  
     window.show()
     sys.exit(app.exec_())

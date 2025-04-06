@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'auth_app',
     "admin_panel",
-    'complaints'
+    'complaints',
+    'dashboard',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -137,3 +138,10 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'priyalotiya25@gmail.com'
 EMAIL_HOST_PASSWORD = 'kadp xnnc ahdz pcer'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
+

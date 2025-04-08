@@ -16,8 +16,28 @@ class LoginWindow(QDialog):
     def login(self):
         email = self.lineEdit.text()
         password = self.lineEdit_2.text()
-        response = requests.post("http://127.0.0.1:8000/auth/login/", json={"email": email, "password": password})
-        print(response.json())
+
+        url = "http://127.0.0.1:8000/auth/login/"
+        payload = {"email": email, "password": password}
+
+        response = requests.post(url, json=payload)  # Send as JSON
+
+        if response.status_code == 200:
+            data = response.json()
+            print("Login response:", data)
+
+            token = data.get("token") or data.get("key")  # Try both
+            user_id = data.get("user_id")
+
+            print("Login successful. Token:", token)
+
+            from dashboard import DashboardWindow
+            self.dashboard_window = DashboardWindow(token, user_id)
+            self.dashboard_window.show()
+            self.hide()
+        else:
+            print("Login failed:", response.json())
+
 
     def open_signup(self):
         from signup import SignupWindow

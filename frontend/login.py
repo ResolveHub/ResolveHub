@@ -57,7 +57,13 @@ class LoginWindow(QMainWindow):
 
         if response.status_code == 200:
             data = response.json()
-            print("Login successful:", data)
+            # print("Login response:", data)
+
+            token = data.get("token") or data.get("key")  # Try both
+            user_id = data.get("user_id")
+
+            print("Login successful")
+
             from dashboard import DashboardWindow
             self.dashboard_window = DashboardWindow(data["token"], data["user_id"])
             self.dashboard_window.show()

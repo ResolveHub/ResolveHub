@@ -2,124 +2,143 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>342</width>
-    <height>600</height>
-   </rect>
-  </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>SignUp</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">
+    QMainWindow {
+        background-color: qlineargradient(
+            x1:0, y1:0, x2:1, y2:1,
+            stop:0 #1e1e2f, stop:1 #2a2a40
+        );
+        font-family: Segoe UI, sans-serif;
+        font-size: 14px;
+        color: #f5f5f5;
+    }
+
+    QLabel {
+        color: #f5f5f5;
+        font-weight: bold;
+    }
+
+    QLineEdit {
+        border: 1px solid #555;
+        border-radius: 5px;
+        padding: 6px;
+        background-color: #2f2f3f;
+        color: #ffffff;
+    }
+
+    QLineEdit:focus {
+        border: 1px solid #00bfff;
+        background-color: #3a3a50;
+    }
+
+    QPushButton {
+        background-color: #00bfff;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+
+    QPushButton:hover {
+        background-color: #009acd;
+    }
+
+    QPushButton:pressed {
+        background-color: #0077a3;
+    }
+   </string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>80</y>
-      <width>47</width>
-      <height>14</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Email</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>110</y>
-      <width>47</width>
-      <height>14</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Username</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_3">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>140</y>
-      <width>47</width>
-      <height>14</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Password</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="lineEdit">
-    <property name="geometry">
-     <rect>
-      <x>120</x>
-      <y>80</y>
-      <width>201</width>
-      <height>21</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="lineEdit_2">
-    <property name="geometry">
-     <rect>
-      <x>120</x>
-      <y>110</y>
-      <width>201</width>
-      <height>20</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="lineEdit_3">
-    <property name="geometry">
-     <rect>
-      <x>120</x>
-      <y>140</y>
-      <width>201</width>
-      <height>20</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>180</y>
-      <width>91</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>SignUp</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="backButton">
-    <property name="geometry">
-     <rect>
-      <x>160</x>
-      <y>180</y>
-      <width>161</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Back to Login</string>
-    </property>
-   </widget>
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,1">
+    <item>
+     <spacer name="verticalSpacerTop">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>100</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item>
+     <layout class="QFormLayout" name="formLayout" labelAlignment="Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Email</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineEdit"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Username</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="lineEdit_2"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Password</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="lineEdit_3">
+        <property name="echoMode">
+         <enum>QLineEdit::Password</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="buttonLayout">
+      <item>
+       <widget class="QPushButton" name="pushButton">
+        <property name="text">
+         <string>Sign Up</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="backButton">
+        <property name="text">
+         <string>Back to Login</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <spacer name="verticalSpacerBottom">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>100</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+   </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>342</width>
-     <height>22</height>
-    </rect>
-   </property>
-  </widget>
+  <widget class="QMenuBar" name="menubar"/>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>

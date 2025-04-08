@@ -1,0 +1,84 @@
+QMainWindow {
+    background-color: qlineargradient(
+        x1:0, y1:0, x2:1, y2:1,
+        stop:0 #1e1e2f, stop:1 #2a2a40
+    );
+    font-family: "Segoe UI", sans-serif;
+    font-size: 14px;
+    color: #f5f5f5;
+}
+
+QLabel {
+    color: #f5f5f5;
+    font-weight: bold;
+    padding: 4px;
+    max-width: 400px;
+}
+
+QComboBox, QSpinBox, QLineEdit {
+    background-color: #2f2f3f;
+    color: #ffffff;
+    border: 1px solid #555;
+    border-radius: 6px;
+    padding: 6px;
+    max-width: 400px;
+}
+
+QComboBox::drop-down {
+    border: none;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #2a2a2a;
+    selection-background-color: #00adb5;
+    color: white;
+}
+
+QPushButton {
+    background-color: #00bfff;
+    color: white;
+    padding: 8px;
+    border-radius: 8px;
+    font-weight: bold;
+    max-width: 400px;
+}
+
+QPushButton:hover {
+    background-color: #009acd;
+}
+
+QPushButton:pressed {
+    background-color: #0077a3;
+}
+
+QMessageBox {
+    background-color: #2a2a40;
+    color: #ffffff;
+    font-family: 'Segoe UI';
+    font-size: 14px;
+    border: 1px solid #444;
+    border-radius: 10px;
+}
+
+QMessageBox QLabel {
+    color: #ffffff;
+    font-weight: 500;
+    padding: 10px;
+}
+
+QMessageBox QPushButton {
+    background-color: #00adb5;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: bold;
+    min-width: 80px;
+}
+
+QMessageBox QPushButton:hover {
+    background-color: #008891;
+}
+
+QMessageBox QPushButton:pressed {
+    background-color: #005f61;
+}

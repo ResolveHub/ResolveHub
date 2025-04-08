@@ -26,7 +26,7 @@ class UpvoteWidget(QWidget):
 
 
     def send_upvote(self):
-        print("Access Token:", self.token)
+        # print("Access Token:", self.token)
         headers = {
             "Authorization": f"Bearer {self.token}"
         }
@@ -41,7 +41,7 @@ class UpvoteWidget(QWidget):
                 result = response.json()
                 self.status_label.setText("✅ " + result.get("message", "Upvoted!"))
                 self.upvote_button.setEnabled(False)
-                print("Upvote Response:", result)
+                # print("Upvote Response:", result)
             else:
                 self.status_label.setText("❌ Failed to upvote.")
                 print("Error:", response.json())

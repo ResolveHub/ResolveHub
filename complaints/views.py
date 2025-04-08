@@ -6,7 +6,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count
 
 from .models import Complaint, Upvote
-# from .forms import ComplaintForm
 from .serializers import ComplaintSerializer
 
 from rest_framework.views import APIView
@@ -44,6 +43,8 @@ class ComplaintListView(generics.ListAPIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def upvote_complaint(request):
     user = request.user
     complaint_id = request.data.get("complaint_id")
@@ -51,13 +52,21 @@ def upvote_complaint(request):
     try:
         complaint = Complaint.objects.get(id=complaint_id)
 
+        # Avoid duplicate upvotes
         if Upvote.objects.filter(user=user, complaint=complaint).exists():
             return Response({"message": "Already upvoted"}, status=200)
 
+        # Save in the separate Upvote model
         Upvote.objects.create(user=user, complaint=complaint)
+
+        # ✅ ALSO save in the ManyToManyField
+        complaint.upvotes.add(user)
+
         return Response({"message": "Upvoted successfully"}, status=201)
+
     except Complaint.DoesNotExist:
         return Response({"error": "Complaint not found"}, status=404)
+
 
 # ==============================
 # FUNCTION-BASED VIEWS
@@ -184,3 +193,47 @@ def create_complaint(request):
         serializer.save(user=request.user) 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+from rest_framework.permissions import IsAuthenticated
+
+class MyComplaintsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        complaints = Complaint.objects.filter(user=request.user)
+        serializer = ComplaintSerializer(complaints, many=True)
+        return Response(serializer.data)
+
+class UpvotedComplaintsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        upvoted_complaint_ids = Upvote.objects.filter(user=request.user).values_list('complaint_id', flat=True)
+        upvoted_complaints = Complaint.objects.filter(id__in=upvoted_complaint_ids)
+        serializer = ComplaintSerializer(upvoted_complaints, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class ComplaintUpdateView(generics.UpdateAPIView):
+    queryset = Complaint.objects.all()
+    serializer_class = ComplaintSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        complaint = super().get_object()
+        if complaint.user != self.request.user:
+            raise PermissionDenied("You can only edit your own complaint.")
+        return complaint
+
+class ComplaintDeleteView(generics.DestroyAPIView):
+    queryset = Complaint.objects.all()
+    serializer_class = ComplaintSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        obj = super().get_object()
+        if obj.user != self.request.user:
+            raise PermissionDenied("You can only delete your own complaint.")
+        return obj

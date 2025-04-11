@@ -2,10 +2,13 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButt
 import requests
 
 class ProfileWindow(QMainWindow):
-    def __init__(self, user_id, token):
+    def __init__(self, user_id, token, dashboard_window, login_window):
         super().__init__()
         self.user_id = user_id
         self.token = token
+        self.dashboard_window = dashboard_window
+        self.login_window = login_window
+
         self.setWindowTitle("👤 Your Profile")
         self.setGeometry(300, 300, 700, 500)
 
@@ -18,6 +21,20 @@ class ProfileWindow(QMainWindow):
         layout.addWidget(tabs)
         container.setLayout(layout)
         self.setCentralWidget(container)
+
+        logout_button = QPushButton("🚪 Logout")
+        logout_button.clicked.connect(self.logout)
+        layout.addWidget(logout_button)
+
+    def logout(self):
+        confirm = QMessageBox.question(self, "Logout", "Are you sure you want to logout?",
+                                    QMessageBox.Yes | QMessageBox.No)
+        if confirm == QMessageBox.Yes:
+            self.dashboard_window.close()
+            self.close()
+            self.login_window.show()
+
+
 
 
 class UserComplaintsTab(QWidget):

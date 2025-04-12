@@ -65,7 +65,7 @@ class LoginWindow(QMainWindow):
             print("Login successful")
 
             from dashboard import DashboardWindow
-            self.dashboard_window = DashboardWindow(data["token"], data["user_id"])
+            self.dashboard_window = DashboardWindow(data["token"], data["user_id"], login_window=self)
             self.dashboard_window.show()
             self.hide()
         else:

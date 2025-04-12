@@ -15,7 +15,17 @@ class Complaint(models.Model):
         ('resolved', 'Resolved'),
         ('rejected', 'Rejected'),
     ], default='pending')
-   
+
+    CONFIRMATION_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('rejected', 'Rejected'),
+    ]
+    user_confirmation_status = models.CharField(
+        max_length=20,
+        choices=CONFIRMATION_STATUS_CHOICES,
+        default='pending'
+    )
     COMPLAINT_TYPE_CHOICES = [
             ('accommodation', 'Accommodation'),
             ('mess', 'Mess & Food'),

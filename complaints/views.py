@@ -237,3 +237,43 @@ class ComplaintDeleteView(generics.DestroyAPIView):
         if obj.user != self.request.user:
             raise PermissionDenied("You can only delete your own complaint.")
         return obj
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.db.models import Q
+from .models import Complaint
+from .serializers import ComplaintSerializer
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_complaints(request):
+    query = request.GET.get('q', '')
+    complaints = Complaint.objects.filter(
+        Q(title__icontains=query) | Q(description__icontains=query),
+        user=request.user  # optional: restrict to logged-in user's complaints
+    )
+    serializer = ComplaintSerializer(complaints, many=True)
+    return Response(serializer.data)
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Complaint
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def confirm_resolution(request):
+    complaint_id = request.data.get("complaint_id")
+    confirmation = request.data.get("confirmation")  # "Confirmed" or "Rejected"
+
+    try:
+        complaint = Complaint.objects.get(id=complaint_id, user=request.user)  # assuming each complaint is linked to a user
+    except Complaint.DoesNotExist:
+        return Response({"error": "Complaint not found"}, status=404)
+
+    complaint.user_confirmation_status = confirmation
+    complaint.save()
+
+    return Response({"message": "Confirmation recorded successfully"}, status=200)

@@ -25,6 +25,9 @@ class ProfileWindow(QMainWindow):
         super().__init__()
         self.user_id = user_id
         self.token = token
+        self.dashboard_window = dashboard_window
+        self.login_window = login_window
+
         self.setWindowTitle("👤 Your Profile")
         self.setGeometry(300, 300, 700, 500)
 

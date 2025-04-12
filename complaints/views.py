@@ -1,3 +1,4 @@
+
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -51,8 +52,6 @@ class ComplaintListView(generics.ListAPIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def upvote_complaint(request):
     user = request.user
     complaint_id = request.data.get("complaint_id")
@@ -68,7 +67,7 @@ def upvote_complaint(request):
         Upvote.objects.create(user=user, complaint=complaint)
 
         # ✅ ALSO save in the ManyToManyField
-        complaint.upvotes.add(user)
+        # complaint.upvotes.add(user)
 
         return Response({"message": "Upvoted successfully"}, status=201)
 

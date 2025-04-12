@@ -1,8 +1,27 @@
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QTabWidget, QInputDialog, QMessageBox
 import requests
+import authority_complaints_window as  AuthorityComplaintWindow
+
+# class ProfileWindow(QMainWindow):
+#     def __init__(self, user_id, token):
+#         super().__init__()
+#         self.user_id = user_id
+#         self.token = token
+#         self.setWindowTitle("👤 Your Profile")
+#         self.setGeometry(300, 300, 700, 500)
+
+#         tabs = QTabWidget()
+#         tabs.addTab(UserComplaintsTab(user_id, token, allow_edit=True), "📝 My Complaints")
+#         tabs.addTab(UserComplaintsTab(user_id, token, upvoted=True), "👍 Upvoted")
+
+#         container = QWidget()
+#         layout = QVBoxLayout()
+#         layout.addWidget(tabs)
+#         container.setLayout(layout)
+#         self.setCentralWidget(container)
 
 class ProfileWindow(QMainWindow):
-    def __init__(self, user_id, token):
+    def __init__(self, user_id, token, is_authority=True):  # made optional
         super().__init__()
         self.user_id = user_id
         self.token = token
@@ -16,8 +35,21 @@ class ProfileWindow(QMainWindow):
         container = QWidget()
         layout = QVBoxLayout()
         layout.addWidget(tabs)
+
+        if is_authority:  # this part stays
+            authority_button = QPushButton("🛠 Complaints Under You")
+            authority_button.clicked.connect(self.open_authority_complaints)
+            layout.addWidget(authority_button)
+
         container.setLayout(layout)
         self.setCentralWidget(container)
+
+    def open_authority_complaints(self):
+        self.auth_window = AuthorityComplaintWindow.AuthorityComplaintWindow(self.token)
+        self.auth_window.show()
+
+
+
 
 
 class UserComplaintsTab(QWidget):

@@ -152,7 +152,7 @@ class Complaint(models.Model):
             last_check = self.last_escalated or self.created_at
             time_diff = now - last_check
 
-            if time_diff >= timedelta(hours=24):
+            if time_diff >= timedelta(hours=8):
                 try:
                     from admin_panel.models import Authority
 

@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.conf import settings
 from admin_panel.models import Authority
+from datetime import timedelta
 
 User = get_user_model()
 
@@ -144,6 +145,32 @@ class Complaint(models.Model):
             except Exception:
                 pass  # Optionally log this
         super().save(*args, **kwargs)
+
+    def escalate_if_needed(self):
+        if self.status.lower() != "resolved":
+            now = timezone.now()
+            last_check = self.last_escalated or self.created_at
+            time_diff = now - last_check
+
+            if time_diff >= timedelta(hours=24):
+                try:
+                    from admin_panel.models import Authority
+
+                    current_authority = self.assigned_authority.authority  # Assuming reverse OneToOne or FK
+                    new_priority = current_authority.priority + 1
+
+                    higher_authority = Authority.objects.filter(
+                        role=self.complaint_type,
+                        priority=new_priority
+                    ).first()
+
+                    if higher_authority:
+                        self.assigned_authority = higher_authority.user
+                        self.last_escalated = now
+                        print(f"Complaint {self.id} escalated to priority {new_priority}")
+                except Exception as e:
+                    print(f"[Escalation Error]: {e}")
+
 
     def total_upvotes(self):
         """Returns the total number of upvotes."""

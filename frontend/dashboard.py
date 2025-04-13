@@ -17,7 +17,9 @@ class DashboardWindow(QMainWindow):
         self.user_id = user_id
 
         self.setWindowTitle("User Dashboard")
-        self.setGeometry(200, 200, 1000, 700)
+        self.resize(600, 500)
+        self.setMinimumSize(600, 500)
+        self.showMaximized()
         
 
         central_widget = QWidget()

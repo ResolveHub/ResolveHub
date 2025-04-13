@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt
 import requests
 import sys
 
+
 class LoginWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -64,10 +65,19 @@ class LoginWindow(QMainWindow):
 
             print("Login successful")
 
-            from dashboard import DashboardWindow
-            self.dashboard_window = DashboardWindow(data["token"], data["user_id"])
-            self.dashboard_window.show()
+            email = self.lineEdit.text()
+
+            if email.endswith("@admin.ac.in"):
+                from admin_panel import AdminPanel
+                self.admin_window = AdminPanel()
+                self.admin_window.show()
+            else:
+                from dashboard import DashboardWindow
+                self.dashboard_window = DashboardWindow(data["token"], data["user_id"])
+                self.dashboard_window.show()
+
             self.hide()
+
         else:
             print("Login failed:", response.json())
 

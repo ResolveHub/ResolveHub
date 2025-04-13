@@ -110,6 +110,7 @@ class DashboardWindow(QMainWindow):
                 QMessageBox.information(self, "Success", "Complaint created successfully.")
                 self.complaint_app.reload_complaints()
             else:
+                QMessageBox.critical(self, "Error", "Failed to record your response.")
                 QMessageBox.warning(self, "Error", f"Failed to create complaint.\n{response.text}")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
@@ -185,7 +186,7 @@ import requests
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout,
     QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
-    QMessageBox, QComboBox, QTextEdit, QMainWindow
+    QMessageBox, QComboBox, QTextEdit, QMainWindow, QFileDialog
 )
 from PyQt5.QtCore import Qt
 
@@ -193,6 +194,7 @@ from PyQt5.QtCore import Qt
 BASE_URL = "http://127.0.0.1:8000/complaint/api/complaints/"
 SEARCH_URL = "http://127.0.0.1:8000/complaint/api/search/"
 CONFIRM_RESOLUTION_URL = "http://127.0.0.1:8000/complaint/api/confirm/"
+GENERATE_REPORT_URL = "http://127.0.0.1:8000/complaint/api/report/"
 
 class UpvoteWidget(QWidget):
     def __init__(self, token, complaint_id, already_upvoted=False):
@@ -243,9 +245,10 @@ class ComplaintApp(QMainWindow):
         self.load_button.clicked.connect(self.reload_complaints)
         self.layout.addWidget(self.load_button)
 
-        # self.create_button = QPushButton("➕ Create Complaint")
-        # self.create_button.clicked.connect(self.create_complaint_ui)
-        # self.layout.addWidget(self.create_button)
+        # # Add download report button
+        # self.download_button = QPushButton("📥 Download Report")
+        # self.download_button.clicked.connect(self.download_report)
+        # self.layout.addWidget(self.download_button)
 
         self.complaints_container = QVBoxLayout()
         self.layout.addLayout(self.complaints_container)
@@ -285,6 +288,9 @@ class ComplaintApp(QMainWindow):
         complaint_text.setWordWrap(True)
         complaint_layout.addWidget(complaint_text)
 
+        # Add buttons layout
+        buttons_layout = QHBoxLayout()
+        
         upvote_count_label = QLabel(f"👍 Total Upvotes: {c.get('total_upvotes', 0)}")
         complaint_layout.addWidget(upvote_count_label)
 
@@ -293,7 +299,14 @@ class ComplaintApp(QMainWindow):
             complaint_id=c['id'],
             already_upvoted=c.get('already_upvoted', False)
         )
-        complaint_layout.addWidget(upvote_widget)
+        buttons_layout.addWidget(upvote_widget)
+
+        # Add download button for each complaint
+        download_button = QPushButton("📥 Download Report")
+        download_button.clicked.connect(lambda checked, cid=c['id']: self.download_report(cid))
+        buttons_layout.addWidget(download_button)
+
+        complaint_layout.addLayout(buttons_layout)
 
         complaint_widget = QWidget()
         complaint_widget.setLayout(complaint_layout)
@@ -395,7 +408,31 @@ class ComplaintApp(QMainWindow):
         if response.status_code == 200:
             QMessageBox.information(self, "Thank you", "Your response has been recorded.")
         else:
-            QMessageBox.critical(self, "Error", "Failed to submit your confirmation.")
+            QMessageBox.critical(self, "Error", "Failed to record your response.")
+
+    def download_report(self, complaint_id=None):
+        try:
+            filename, _ = QFileDialog.getSaveFileName(
+                self,
+                "Save Report",
+                "complaint_report.pdf",
+                "PDF Files (*.pdf)"
+            )
+            if not filename:  # User cancelled
+                return
+                
+            headers = {"Authorization": f"Bearer {self.token}"}
+            url = f"{GENERATE_REPORT_URL}{complaint_id}/" if complaint_id else GENERATE_REPORT_URL
+            response = requests.get(url, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                with open(filename, "wb") as f:
+                    f.write(response.content)
+                QMessageBox.information(self, "Report Downloaded", f"Report saved as {filename}")
+            else:
+                QMessageBox.critical(self, "Download Failed", f"Server returned status code: {response.status_code}")
+        except Exception as e:
+            QMessageBox.critical(self, "Download Failed", f"Error: {str(e)}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

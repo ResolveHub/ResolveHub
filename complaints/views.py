@@ -1,4 +1,3 @@
-
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -319,6 +318,15 @@ class ComplaintDeleteView(generics.DestroyAPIView):
         return obj
 
 
+class ComplaintDetailView(generics.RetrieveAPIView):
+    queryset = Complaint.objects.all()
+    serializer_class = ComplaintSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Complaint.objects.filter(
+            created_by=self.request.user
+        )
 
 
 from rest_framework.permissions import IsAuthenticated
@@ -361,3 +369,88 @@ def search_complaints(request):
 
     serializer = ComplaintSerializer(complaints, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+from io import BytesIO
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from django.http import HttpResponse
+from .models import Complaint
+
+def generate_complaint_report(request, pk=None):
+    # Create a file-like buffer to receive PDF data
+    buffer = BytesIO()
+    
+    # Create the PDF object using the buffer as its "file"
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    
+    # Container for the 'Flowable' objects
+    elements = []
+    
+    # Define styles
+    styles = getSampleStyleSheet()
+    title_style = styles['Heading1']
+    normal_style = styles['Normal']
+    
+    # Add the title
+    if pk:
+        try:
+            complaint = Complaint.objects.get(pk=pk)
+            elements.append(Paragraph(f"Complaint Report - #{complaint.id}", title_style))
+            
+            # Add complaint details
+            elements.append(Spacer(1, 12))
+            elements.append(Paragraph(f"Title: {complaint.title}", normal_style))
+            elements.append(Paragraph(f"Status: {complaint.status}", normal_style))
+            elements.append(Paragraph(f"Created: {complaint.created_at.strftime('%Y-%m-%d %H:%M')}", normal_style))
+            elements.append(Paragraph(f"Description: {complaint.description}", normal_style))
+            
+        except Complaint.DoesNotExist:
+            return HttpResponse("Complaint not found", status=404)
+    else:
+        # Generate report for all complaints
+        elements.append(Paragraph("All Complaints Report", title_style))
+        complaints = Complaint.objects.all()
+        
+        # Create table data
+        data = [['ID', 'Title', 'Status', 'Created']]
+        for c in complaints:
+            data.append([
+                str(c.id),
+                c.title,
+                c.status,
+                c.created_at.strftime('%Y-%m-%d %H:%M')
+            ])
+        
+        # Create table
+        table = Table(data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 14),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(table)
+    
+    # Build the PDF
+    doc.build(elements)
+    
+    # Get the value of the BytesIO buffer and write it to the response
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    # Create the HTTP response
+    response = HttpResponse(content_type='application/pdf')
+    filename = f"complaint_{'single' if pk else 'all'}_report.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response.write(pdf)
+    
+    return response

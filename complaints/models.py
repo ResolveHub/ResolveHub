@@ -137,7 +137,8 @@ class Complaint(models.Model):
         if self.assigned_authority is None:
             try:
                 from admin_panel.models import Authority  # 🔄 Adjust app name if needed
-                authority = Authority.objects.filter(priority=1).first()
+                authority = Authority.objects.filter(role=self.complaint_type,
+                priority=1).first()
                 if authority:
                     self.assigned_authority = authority.user
             except Exception:

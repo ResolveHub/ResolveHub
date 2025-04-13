@@ -1,8 +1,9 @@
 from django.urls import path
 from . import views
-from .views import assigned_complaints_api
+# from .views import assigned_complaints_api
 from .views import complaint_type_choices
-from .views import my_assigned_complaints
+# from .views import my_assigned_complaints
+from .views import complaints_under_you
 
 urlpatterns = [
     # Complaint List / Create / Delete / Update
@@ -19,7 +20,8 @@ urlpatterns = [
     path('api/complaints/upvote/', views.upvote_complaint, name='upvote_complaint'),
 
     # Assigned Complaints (Authority-specific)
-    path('complaints/assigned/', my_assigned_complaints, name='assigned-complaints'),
+    # path('complaints/assigned/', my_assigned_complaints, name='assigned-complaints'),
+ path('api/complaints/under-you/', complaints_under_you, name='complaints-under-you'),
 
     path('complaint-types/', complaint_type_choices, name='complaint-types'),
     path('api/search/', views.search_complaints, name='search-complaints'),

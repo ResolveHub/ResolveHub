@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QInputDialog, QMessageBox
 )
 import requests
-import authority_complaints_window as AuthorityComplaintWindow
+from authority_complaints_window import AuthorityComplaintWindow
 
 
 class ProfileWindow(QMainWindow):
@@ -46,7 +46,7 @@ class ProfileWindow(QMainWindow):
         self.setCentralWidget(self.container)
 
     def open_authority_complaints(self):
-        self.auth_window = AuthorityComplaintWindow.AuthorityComplaintWindow(self.token)
+        self.auth_window = AuthorityComplaintWindow(self.token)
         self.auth_window.show()
 
 

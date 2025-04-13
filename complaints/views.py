@@ -95,49 +95,71 @@ from complaints.models import Complaint  # Update if your model is in another ap
 def complaint_type_choices(request):
     return Response(dict(Complaint.COMPLAINT_TYPE_CHOICES))
 
-@csrf_exempt
-@require_GET
-def assigned_complaints_api(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({"error": "Authentication required"}, status=401)
+# @csrf_exempt
+# @require_GET
+# def assigned_complaints_api(request):
+#     if not request.user.is_authenticated:
+#         return JsonResponse({"error": "Authentication required"}, status=401)
 
+#     user = request.user
+
+#     if not getattr(user, 'is_authority', False):
+#         return JsonResponse({"error": "Not an authority"}, status=403)
+
+#     # Escalation logic: escalate unresolved complaints based on authority level and time
+#     unresolved = Complaint.objects.filter(status="unresolved")
+
+#     for complaint in unresolved:
+#         hours_passed = (timezone.now() - complaint.created_at).total_seconds() / 3600
+
+#         if complaint.assigned_authority:
+#             level = getattr(complaint.assigned_authority, 'authority_level', 1)
+#             if level < 3 and hours_passed > level * 24:
+#                 next_auth = get_user_model().objects.filter(
+#                     is_authority=True,
+#                     authority_level=level + 1
+#                 ).first()
+#                 if next_auth:
+#                     complaint.assigned_authority = next_auth
+#                     complaint.save()
+
+#     # Get complaints assigned to this authority
+#     assigned = Complaint.objects.filter(assigned_authority=user)
+
+#     complaints_data = []
+#     for c in assigned:
+#         complaints_data.append({
+#             "id": c.id,
+#             "title": c.title,
+#             "description": c.description,
+#             "status": c.status,
+#             "created_at": c.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+#             "user": c.user.username
+#         })
+
+#     return JsonResponse({"complaints": complaints_data})
+
+# views.py
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Complaint
+from .serializers import ComplaintSerializer
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def complaints_under_you(request):
     user = request.user
 
-    if not getattr(user, 'is_authority', False):
-        return JsonResponse({"error": "Not an authority"}, status=403)
+    # Check if user is authority
+    if hasattr(user, 'authority'):
+        complaints = Complaint.objects.filter(assigned_authority=user).order_by('-created_at')
+        serializer = ComplaintSerializer(complaints, many=True, context={'request': request})
+        return Response(serializer.data)
 
-    # Escalation logic: escalate unresolved complaints based on authority level and time
-    unresolved = Complaint.objects.filter(status="unresolved")
+    return Response({"message": "You are not an authority"}, status=403)
 
-    for complaint in unresolved:
-        hours_passed = (timezone.now() - complaint.created_at).total_seconds() / 3600
-
-        if complaint.assigned_authority:
-            level = getattr(complaint.assigned_authority, 'authority_level', 1)
-            if level < 3 and hours_passed > level * 24:
-                next_auth = get_user_model().objects.filter(
-                    is_authority=True,
-                    authority_level=level + 1
-                ).first()
-                if next_auth:
-                    complaint.assigned_authority = next_auth
-                    complaint.save()
-
-    # Get complaints assigned to this authority
-    assigned = Complaint.objects.filter(assigned_authority=user)
-
-    complaints_data = []
-    for c in assigned:
-        complaints_data.append({
-            "id": c.id,
-            "title": c.title,
-            "description": c.description,
-            "status": c.status,
-            "created_at": c.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            "user": c.user.username
-        })
-
-    return JsonResponse({"complaints": complaints_data})
 
 # ==============================
 # FUNCTION-BASED VIEWS

@@ -84,15 +84,10 @@ STATUS_CHOICES = [
 
 # COMPLAINT TYPE choices
 COMPLAINT_TYPE_CHOICES = [
-    ('accommodation', 'Accommodation'),
-    ('mess', 'Mess & Food'),
-    ('maintenance', 'Maintenance'),
-    ('safety', 'Safety & Security'),
-    ('technical', 'Technical (Wi-Fi, Electricity, etc.)'),
-    ('billing', 'Billing & Payments'),
-    ('noise', 'Noise & Disturbance'),
-    ('staff', 'Staff Behavior'),
-    ('general', 'General'),
+    ('Transport', 'Transport'),
+    ('Mess', 'Mess'),
+    ('Maintenance', 'Maintenance'),
+    ('Other', 'Other'),
 ]
 
 
@@ -131,7 +126,7 @@ class Complaint(models.Model):
     complaint_type = models.CharField(
         max_length=30,
         choices=COMPLAINT_TYPE_CHOICES,
-        default='general'
+        default='Other'
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

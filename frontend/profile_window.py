@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import (
 import requests
 from authority_complaints_window import AuthorityComplaintWindow
 
-
 class ProfileWindow(QMainWindow):
     def __init__(self, user_id, token, is_authority=False, dashboard_window=None, login_window=None, parent=None):
         super().__init__(parent)
@@ -17,6 +16,9 @@ class ProfileWindow(QMainWindow):
 
         self.setWindowTitle("👤 Your Profile")
         self.setGeometry(300, 300, 700, 500)
+        
+         # Apply dark theme
+        self.apply_dark_theme()
 
         # Main layout
         self.container = QWidget()
@@ -41,9 +43,36 @@ class ProfileWindow(QMainWindow):
                 self.layout.addWidget(authority_button)
             except Exception as e:
                 print(f"[ERROR] Failed to load authority section: {e}")
+        self.layout.addWidget(self.tabs)
+
+        # Logout Button
+        logout_button = QPushButton("🚪 Logout")
+        logout_button.clicked.connect(self.logout)
+        self.layout.addWidget(logout_button)
 
         self.container.setLayout(self.layout)
         self.setCentralWidget(self.container)
+
+    def apply_dark_theme(self):
+        try:
+            with open("dark_theme.qss", "r") as file:
+                self.setStyleSheet(file.read())
+        except FileNotFoundError:
+            print("Dark theme QSS file not found.")
+
+    def logout(self):
+        confirm = QMessageBox.question(self, "Logout", "Are you sure you want to logout?", QMessageBox.Yes | QMessageBox.No)
+        if confirm == QMessageBox.Yes:
+            # Close the ProfileWindow
+            self.close()
+
+            # Close the DashboardWindow if it exists
+            if self.dashboard_window:
+                self.dashboard_window.close()
+
+            # Show the LoginWindow if it exists
+            if self.login_window:
+                self.login_window.show()
 
     def open_authority_complaints(self):
         self.auth_window = AuthorityComplaintWindow(self.token)
@@ -51,32 +80,26 @@ class ProfileWindow(QMainWindow):
 
 
 class UserComplaintsTab(QWidget):
-    def __init__(self, user_id, token, upvoted=False, allow_edit=False):
+   
+    def __init__(self, user_id, token, allow_edit=False, upvoted=False):
         super().__init__()
         self.user_id = user_id
         self.token = token
-        self.upvoted = upvoted
         self.allow_edit = allow_edit
 
+        self.upvoted = upvoted
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        # Add debug label to confirm tab is loading
         self.layout.addWidget(QLabel("🔍 Loading complaints..."))
-
         self.load_complaints()
-
     def load_complaints(self):
         try:
             headers = {
                 "Authorization": f"Bearer {self.token}"
             }
 
-            if self.upvoted:
-                url = "http://127.0.0.1:8000/complaint/api/complaints/upvoted/"
-            else:
-                url = "http://127.0.0.1:8000/complaint/api/complaints/mine/"
-
+            url = "http://127.0.0.1:8000/complaint/api/complaints/mine/" if not self.upvoted else "http://127.0.0.1:8000/complaint/api/complaints/upvoted/"
             response = requests.get(url, headers=headers)
             print("🔄 API Response Code:", response.status_code)
             print("🔄 API Response Body:", response.text)
@@ -172,5 +195,4 @@ class UserComplaintsTab(QWidget):
             if widget:
                 widget.deleteLater()
         self.load_complaints()
-
         

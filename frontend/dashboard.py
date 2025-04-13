@@ -64,13 +64,9 @@ class DashboardWindow(QMainWindow):
         profile_button.clicked.connect(self.open_profile)
         main_layout.addWidget(profile_button)
 
-    # def open_profile(self):
-    #     self.profile_window = ProfileWindow(self.user_id, self.token)
-    #     self.profile_window.show()
     def open_profile(self):
-        self.profile_window = ProfileWindow(self.user_id, self.token, self, self.login_window)
+        self.profile_window = ProfileWindow(self.user_id, self.token, self, dashboard_window=self, login_window=self.login_window)
         self.profile_window.show()
-
      
 
     def create_complaint(self):
@@ -130,6 +126,9 @@ BASE_URL = "http://127.0.0.1:8000/complaint/api/complaints/"
 SEARCH_URL = "http://127.0.0.1:8000/complaint/api/search/"
 CONFIRM_RESOLUTION_URL = "http://127.0.0.1:8000/complaint/api/confirm/"
 
+from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QLabel, QMessageBox
+import requests
+
 class UpvoteWidget(QWidget):
     def __init__(self, token, complaint_id, already_upvoted=False):
         super().__init__()
@@ -140,20 +139,76 @@ class UpvoteWidget(QWidget):
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
 
-        self.upvote_button = QPushButton("👍 Upvote" if not self.already_upvoted else "✅ Upvoted")
-        self.upvote_button.setEnabled(not self.already_upvoted)
-        self.upvote_button.clicked.connect(self.send_upvote)
+        # Add upvote button
+        self.upvote_button = QPushButton("✅ Upvoted" if self.already_upvoted else "👍 Upvote")
+        self.upvote_button.clicked.connect(self.toggle_upvote)
         self.layout.addWidget(self.upvote_button)
 
-    def send_upvote(self):
-        headers = {"Authorization": f"Bearer {self.token}"}
-        response = requests.post(BASE_URL + f"{self.complaint_id}/upvote/", headers=headers)
+        # Add status label
+        self.status_label = QLabel("")
+        self.layout.addWidget(self.status_label)
 
-        if response.status_code == 200:
-            self.upvote_button.setText("✅ Upvoted")
-            self.upvote_button.setEnabled(False)
+    def toggle_upvote(self):
+        if self.already_upvoted:
+            # Ask for confirmation before removing upvote
+            confirm = QMessageBox.question(
+                self,
+                "Remove Upvote",
+                "Are you sure you want to remove your upvote?",
+                QMessageBox.Yes | QMessageBox.No
+            )
+            if confirm == QMessageBox.Yes:
+                self.remove_upvote()
         else:
-            QMessageBox.warning(self, "Error", "Failed to upvote complaint.")
+            self.add_upvote()
+
+    def add_upvote(self):
+        headers = {
+            "Authorization": f"Bearer {self.token}"
+        }
+        data = {
+            "complaint_id": self.complaint_id
+        }
+
+        try:
+            response = requests.post("http://127.0.0.1:8000/complaint/api/complaints/upvote/", json=data, headers=headers)
+
+            if response.status_code in [200, 201]:
+                self.already_upvoted = True
+                self.upvote_button.setText("✅ Upvoted")
+                self.status_label.setText("✅ Upvoted successfully!")
+            else:
+                self.status_label.setText("❌ Failed to upvote.")
+                print("Error:", response.json())
+
+        except Exception as e:
+            self.status_label.setText("❌ Error occurred.")
+            print("Exception:", str(e))
+
+    def remove_upvote(self):
+        headers = {
+            "Authorization": f"Bearer {self.token}"
+        }
+        data = {
+            "complaint_id": self.complaint_id
+        }
+
+        try:
+            response = requests.post("http://127.0.0.1:8000/complaint/api/complaints/remove-upvote/", json=data, headers=headers)
+
+            if response.status_code == 200:
+                self.already_upvoted = False
+                self.upvote_button.setText("👍 Upvote")
+                self.status_label.setText("✅ Upvote removed successfully!")
+            else:
+                self.status_label.setText("❌ Failed to remove upvote.")
+                print("Error:", response.json())
+
+        except Exception as e:
+            self.status_label.setText("❌ Error occurred.")
+            print("Exception:", str(e))
+
+
 
 class ComplaintApp(QMainWindow):
     def __init__(self, user_id, token):
@@ -199,6 +254,7 @@ class ComplaintApp(QMainWindow):
         try:
             headers = {"Authorization": f"Bearer {self.token}"}
             response = requests.get(BASE_URL, headers=headers)
+            # response = requests.get("http://127.0.0.1:8000/complaint/api/complaints/", headers=headers)
 
             if response.status_code == 200:
                 data = response.json()

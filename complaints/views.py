@@ -336,3 +336,28 @@ def my_assigned_complaints(request):
         serializer = ComplaintSerializer(complaints, many=True)
         return Response(serializer.data)
     return Response({"message": "User is not an authority"})
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Complaint
+from .serializers import ComplaintSerializer
+from django.db.models import Q
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_complaints(request):
+    query = request.GET.get('q', '').strip()
+
+    if not query:
+        return Response({"detail": "Search query missing."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Search in title or description using case-insensitive partial match
+    complaints = Complaint.objects.filter(
+        Q(title__icontains=query) | Q(description__icontains=query),
+        # user=request.user  # optional: only search complaints belonging to the current user
+    )
+
+    serializer = ComplaintSerializer(complaints, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)

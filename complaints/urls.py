@@ -46,6 +46,7 @@ urlpatterns = [
       path('complaints/assigned/',my_assigned_complaints, name='assigned-complaints'),
 
      path('complaint-types/', complaint_type_choices, name='complaint-types'),
+     path('api/search/', views.search_complaints, name='search-complaints'),
 ]
 
 

@@ -35,7 +35,7 @@ class UpvoteWidget(QWidget):
         }
 
         try:
-            response = requests.post("http://127.0.0.1:8000/complaint/api/upvote/", json=data, headers=headers)
+            response = requests.post("http://127.0.0.1:8000/complaint/api/complaints/upvote/", json=data, headers=headers)
 
             if response.status_code in [200, 201]:
                 result = response.json()

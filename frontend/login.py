@@ -73,13 +73,17 @@ class LoginWindow(QMainWindow):
                 self.admin_window.show()
             else:
                 from dashboard import DashboardWindow
-                self.dashboard_window = DashboardWindow(data["token"], data["user_id"])
+                self.dashboard_window = DashboardWindow(data["token"], data["user_id"] , self)
                 self.dashboard_window.show()
 
             self.hide()
 
         else:
-            print("Login failed:", response.json())
+            try:
+                error_data = response.json()
+            except ValueError:
+                error_data = {"error": "Unexpected error or empty response from server."}
+            print("Login failed:", error_data)
 
     def open_signup(self):
         from signup import SignupWindow

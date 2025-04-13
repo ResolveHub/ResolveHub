@@ -279,8 +279,9 @@ class ComplaintApp(QMainWindow):
 
     def display_complaint(self, c):
         complaint_layout = QVBoxLayout()
+        self.setGeometry(100, 100, 900, 700)
 
-        complaint_text = QLabel(f"📌 Title: {c['title']}\n📝 Description: {c['description']}\n📅 Created: {c['created_at']}")
+        complaint_text = QLabel(f"📌 Title: {c['title']}\n📝 Description: {c['description']}\n📅 Created: {c['created_at']} \n Status: {c['status']}")
         complaint_text.setWordWrap(True)
         complaint_layout.addWidget(complaint_text)
 

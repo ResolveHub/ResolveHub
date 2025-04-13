@@ -86,7 +86,7 @@ class UserComplaintsTab(QWidget):
                 if data:
                     for c in data:
                         complaint_layout = QVBoxLayout()
-                        complaint_text = QLabel(f"📌 Title: {c['title']}\n📝 Description: {c['description']}")
+                        complaint_text = QLabel(f"📌 Title: {c['title']}\n📝 Description: {c['description']} \n Status: {c['status']}")
                         complaint_layout.addWidget(complaint_text)
 
                         upvote_count_label = QLabel(f"👍 Total Upvotes: {c.get('total_upvotes', 0)}")

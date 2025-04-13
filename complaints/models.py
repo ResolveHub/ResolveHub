@@ -84,15 +84,10 @@ STATUS_CHOICES = [
 
 # COMPLAINT TYPE choices
 COMPLAINT_TYPE_CHOICES = [
-    ('accommodation', 'Accommodation'),
-    ('mess', 'Mess & Food'),
-    ('maintenance', 'Maintenance'),
-    ('safety', 'Safety & Security'),
-    ('technical', 'Technical (Wi-Fi, Electricity, etc.)'),
-    ('billing', 'Billing & Payments'),
-    ('noise', 'Noise & Disturbance'),
-    ('staff', 'Staff Behavior'),
-    ('general', 'General'),
+    ('Transport', 'Transport'),
+    ('Mess', 'Mess'),
+    ('Maintenance', 'Maintenance'),
+    ('Other', 'Other'),
 ]
 
 
@@ -131,7 +126,7 @@ class Complaint(models.Model):
     complaint_type = models.CharField(
         max_length=30,
         choices=COMPLAINT_TYPE_CHOICES,
-        default='general'
+        default='Other'
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -142,7 +137,8 @@ class Complaint(models.Model):
         if self.assigned_authority is None:
             try:
                 from admin_panel.models import Authority  # 🔄 Adjust app name if needed
-                authority = Authority.objects.filter(priority=1).first()
+                authority = Authority.objects.filter(role=self.complaint_type,
+                priority=1).first()
                 if authority:
                     self.assigned_authority = authority.user
             except Exception:

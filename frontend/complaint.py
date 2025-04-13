@@ -119,7 +119,7 @@ class ComplaintApp(QMainWindow):
         layout.addWidget(self.description_input)
 
         self.type_dropdown = QComboBox()
-        self.type_dropdown.addItems(["Accommodation", "Mess", "Maintenance", "Technical", "Billing"])
+        self.type_dropdown.addItems(["Transport", "Mess", "Maintenance", "Other"])
         layout.addWidget(QLabel("Complaint Type:"))
         layout.addWidget(self.type_dropdown)
 

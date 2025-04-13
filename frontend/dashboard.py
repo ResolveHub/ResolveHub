@@ -75,8 +75,7 @@ class DashboardWindow(QMainWindow):
 
     def create_complaint(self):
         types = [
-            'accommodation', 'mess', 'maintenance', 'safety', 'technical',
-            'billing', 'noise', 'staff', 'general'
+            'Transport','Maintenance','Mess','Other'
         ]
 
         complaint_type, ok = QInputDialog.getItem(
@@ -101,6 +100,7 @@ class DashboardWindow(QMainWindow):
         data = {
             "title": title,
             "description": description,
+            "complaint_type": complaint_type,
             "created_by": self.user_id
         }
 

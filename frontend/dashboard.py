@@ -6,15 +6,16 @@ from PyQt5.QtCore import Qt
 import requests
 from upvote import UpvoteWidget
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QWidget, QVBoxLayout
-from profile_window import ProfileWindow  # Create this new file next
+from profile_window import ProfileWindow
 
 
 
 class DashboardWindow(QMainWindow):
-    def __init__(self, token, user_id):
+    def __init__(self, token, user_id, login_window):
         super().__init__()
         self.token = token
         self.user_id = user_id
+        self.login_window = login_window
 
         self.setWindowTitle("User Dashboard")
         self.resize(600, 500)
@@ -24,12 +25,22 @@ class DashboardWindow(QMainWindow):
 
         central_widget = QWidget()
         main_layout = QVBoxLayout()
+        layout = QVBoxLayout()
 
         # Welcome Label
         welcome = QLabel(f"Welcome, User ID: {user_id}")
         welcome.setAlignment(Qt.AlignCenter)
         welcome.setStyleSheet("font-size: 18px; font-weight: bold; margin: 10px;")
         main_layout.addWidget(welcome)
+
+        # Embed ComplaintApp (which handles upvotes now)
+        self.complaint_app = ComplaintApp(user_id, token)
+        layout.addWidget(self.complaint_app)
+ 
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
 
         # Create Complaint Button (outside scroll area)
         self.create_button = QPushButton("➕ Create New Complaint")
@@ -43,6 +54,7 @@ class DashboardWindow(QMainWindow):
         self.scroll_area.setWidget(self.complaint_app)
         main_layout.addWidget(self.scroll_area)
 
+        main_layout.addWidget(QLabel("Your Complaints:"))
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
 
@@ -50,9 +62,13 @@ class DashboardWindow(QMainWindow):
         profile_button.clicked.connect(self.open_profile)
         main_layout.addWidget(profile_button)
 
+    # def open_profile(self):
+    #     self.profile_window = ProfileWindow(self.user_id, self.token)
+    #     self.profile_window.show()
     def open_profile(self):
-        self.profile_window = ProfileWindow(self.user_id, self.token)
+        self.profile_window = ProfileWindow(self.user_id, self.token, self, self.login_window)
         self.profile_window.show()
+
      
 
     def create_complaint(self):
@@ -130,11 +146,13 @@ class ComplaintApp(QWidget):
                     for c in data:
                         complaint_layout = QVBoxLayout()
 
-                        complaint_text = QLabel(f"📌 Title: {c['title']}\n📝 Description: {c['description']}")
+                        complaint_text = QLabel(f"📌 Title: {c['title']}\n📝 Description: {c['description']}\n📅 Created: {c['created_at']}")
                         complaint_text.setWordWrap(True)
+                        complaint_text.setObjectName("complaintText")
                         complaint_layout.addWidget(complaint_text)
 
                         upvote_count_label = QLabel(f"👍 Total Upvotes: {c.get('total_upvotes', 0)}")
+                        upvote_count_label.setObjectName("upvoteCount")
                         complaint_layout.addWidget(upvote_count_label)
 
                         upvote_widget = UpvoteWidget(
@@ -145,6 +163,7 @@ class ComplaintApp(QWidget):
                         complaint_layout.addWidget(upvote_widget)
 
                         complaint_widget = QWidget()
+                        complaint_widget.setObjectName("complaintBox")
                         complaint_widget.setLayout(complaint_layout)
                         complaint_widget.setStyleSheet(
                             "border: 1px solid gray; border-radius: 8px; padding: 10px; margin: 10px;"

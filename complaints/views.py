@@ -1,3 +1,4 @@
+
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -13,6 +14,14 @@ from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
+
+
+from django.http import JsonResponse
+from django.utils import timezone
+from .models import Complaint
+from auth_app.models import User
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import get_user_model
 
 # ==============================
 # API VIEWS
@@ -43,11 +52,12 @@ class ComplaintListView(generics.ListAPIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def upvote_complaint(request):
     user = request.user
     complaint_id = request.data.get("complaint_id")
+
+    if not complaint_id:
+        return Response({"error": "Complaint ID is required"}, status=400)
 
     try:
         complaint = Complaint.objects.get(id=complaint_id)
@@ -56,10 +66,10 @@ def upvote_complaint(request):
         if Upvote.objects.filter(user=user, complaint=complaint).exists():
             return Response({"message": "Already upvoted"}, status=200)
 
-        # Save in the separate Upvote model
+        # Save in the Upvote model
         Upvote.objects.create(user=user, complaint=complaint)
 
-        # ✅ ALSO save in the ManyToManyField
+        # ✅ Also update the ManyToManyField
         complaint.upvotes.add(user)
 
         return Response({"message": "Upvoted successfully"}, status=201)
@@ -67,6 +77,68 @@ def upvote_complaint(request):
     except Complaint.DoesNotExist:
         return Response({"error": "Complaint not found"}, status=404)
 
+
+from django.http import JsonResponse
+from django.utils import timezone
+from django.contrib.auth import get_user_model
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import authentication_classes
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
+from complaints.models import Complaint  # Update if your model is in another app
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def complaint_type_choices(request):
+    return Response(dict(Complaint.COMPLAINT_TYPE_CHOICES))
+
+@csrf_exempt
+@require_GET
+def assigned_complaints_api(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
+    user = request.user
+
+    if not getattr(user, 'is_authority', False):
+        return JsonResponse({"error": "Not an authority"}, status=403)
+
+    # Escalation logic: escalate unresolved complaints based on authority level and time
+    unresolved = Complaint.objects.filter(status="unresolved")
+
+    for complaint in unresolved:
+        hours_passed = (timezone.now() - complaint.created_at).total_seconds() / 3600
+
+        if complaint.assigned_authority:
+            level = getattr(complaint.assigned_authority, 'authority_level', 1)
+            if level < 3 and hours_passed > level * 24:
+                next_auth = get_user_model().objects.filter(
+                    is_authority=True,
+                    authority_level=level + 1
+                ).first()
+                if next_auth:
+                    complaint.assigned_authority = next_auth
+                    complaint.save()
+
+    # Get complaints assigned to this authority
+    assigned = Complaint.objects.filter(assigned_authority=user)
+
+    complaints_data = []
+    for c in assigned:
+        complaints_data.append({
+            "id": c.id,
+            "title": c.title,
+            "description": c.description,
+            "status": c.status,
+            "created_at": c.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "user": c.user.username
+        })
+
+    return JsonResponse({"complaints": complaints_data})
 
 # ==============================
 # FUNCTION-BASED VIEWS
@@ -172,7 +244,15 @@ class ComplaintCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        # Preserve the current user (creator)
+        complaint = serializer.save(user=self.request.user)
+
+        # ✅ If no authority was assigned manually, assign to authority_level=1 by default
+        if not complaint.assigned_authority:
+            default_authority = User.objects.filter(is_authority=True, authority_level=1).first()
+            if default_authority:
+                complaint.assigned_authority = default_authority
+                complaint.save()
 
 
 from rest_framework.decorators import api_view, permission_classes
@@ -237,3 +317,22 @@ class ComplaintDeleteView(generics.DestroyAPIView):
         if obj.user != self.request.user:
             raise PermissionDenied("You can only delete your own complaint.")
         return obj
+
+
+
+
+from rest_framework.permissions import IsAuthenticated
+from .models import Complaint
+from .serializers import ComplaintSerializer
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_assigned_complaints(request):
+    user = request.user
+    if hasattr(user, 'authority'):
+        complaints = Complaint.objects.filter(current_authority=user)
+        serializer = ComplaintSerializer(complaints, many=True)
+        return Response(serializer.data)
+    return Response({"message": "User is not an authority"})

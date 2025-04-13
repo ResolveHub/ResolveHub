@@ -4,9 +4,13 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton, 
     QLineEdit, QLabel, QComboBox, QTextEdit, QTableWidget, QTableWidgetItem
 )
+from PyQt5.QtWidgets import QMessageBox
 
 # Backend API URL (Change according to your Django server)
 BASE_URL = "http://127.0.0.1:8000/complaints/"
+SEARCH_URL = "http://127.0.0.1:8000/complaints/search/"
+CONFIRM_RESOLUTION_URL = "http://127.0.0.1:8000/api/confirm_resolution"
+
 
 class ComplaintApp(QMainWindow):
     def __init__(self, user_id, token):
@@ -67,12 +71,21 @@ class ComplaintApp(QMainWindow):
             print("Failed to load complaints")
 
     def search_complaints(self):
-        """Search complaints by title"""
-        query = self.search_bar.text()
+        """Search complaints by title, description, or ID (trace)"""
+
+        # Check if trace input has text; if not, use search bar
+        query = self.search_bar.text().strip()
+
+        if not query:
+            QMessageBox.warning(self, "Search Error", "Please enter a search term.")
+            return
+
         headers = {
             "Authorization": f"Bearer {self.token}"
         }
-        response = requests.get(BASE_URL + f"?q={query}",headers=headers)
+
+        # Send search query to backend
+        response = requests.get(SEARCH_URL, params={"q": query}, headers=headers)
 
         if response.status_code == 200:
             complaints = response.json()
@@ -81,6 +94,11 @@ class ComplaintApp(QMainWindow):
                 self.complaint_table.setItem(row, 0, QTableWidgetItem(str(complaint["id"])))
                 self.complaint_table.setItem(row, 1, QTableWidgetItem(complaint["title"]))
                 self.complaint_table.setItem(row, 2, QTableWidgetItem(complaint["status"]))
+                # ✅ Ask user to confirm resolution if needed
+                if complaint["status"] == "Resolved" and complaint.get("user_confirmation_status") == "Pending":
+                       self.ask_user_confirmation(complaint)
+        else: 
+            QMessageBox.critical(self, "Search Failed", "Failed to search complaints.")
 
     def create_complaint_ui(self):
         """Show UI to create a new complaint"""
@@ -132,7 +150,28 @@ class ComplaintApp(QMainWindow):
             self.load_complaints()
         else:
             print("Error submitting complaint:", response.json())
-            
+
+    def ask_user_confirmation(self, complaint):
+        reply = QMessageBox.question(
+            self,
+            "Confirm Resolution",
+            f"Your complaint titled \"{complaint['title']}\" has been marked as resolved.\n\nIs the issue actually resolved?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+
+        confirmation = "Confirmed" if reply == QMessageBox.Yes else "Rejected"
+
+        headers = {"Authorization": f"Bearer {self.token}"}
+        response = requests.post(
+            CONFIRM_RESOLUTION_URL,
+            json={"complaint_id": complaint["id"], "confirmation": confirmation},
+            headers=headers
+        )
+
+        if response.status_code == 200:
+            QMessageBox.information(self, "Thank you", "Your response has been recorded.")
+        else:
+            QMessageBox.critical(self, "Error", "Failed to submit your confirmation.")
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     # TEMP VALUES JUST FOR TESTING

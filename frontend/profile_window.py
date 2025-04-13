@@ -1,23 +1,53 @@
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QTabWidget, QInputDialog, QMessageBox
+from PyQt5.QtWidgets import (
+    QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QTabWidget,
+    QInputDialog, QMessageBox
+)
 import requests
+import authority_complaints_window as AuthorityComplaintWindow
+
 
 class ProfileWindow(QMainWindow):
-    def __init__(self, user_id, token):
-        super().__init__()
+    def __init__(self, user_id, token, is_authority=False, dashboard_window=None, login_window=None, parent=None):
+        super().__init__(parent)
         self.user_id = user_id
         self.token = token
+        self.is_authority = is_authority
+        self.dashboard_window = dashboard_window
+        self.login_window = login_window
+
         self.setWindowTitle("👤 Your Profile")
         self.setGeometry(300, 300, 700, 500)
 
-        tabs = QTabWidget()
-        tabs.addTab(UserComplaintsTab(user_id, token, allow_edit=True), "📝 My Complaints")
-        tabs.addTab(UserComplaintsTab(user_id, token, upvoted=True), "👍 Upvoted")
+        # Main layout
+        self.container = QWidget()
+        self.layout = QVBoxLayout()
 
-        container = QWidget()
-        layout = QVBoxLayout()
-        layout.addWidget(tabs)
-        container.setLayout(layout)
-        self.setCentralWidget(container)
+        # Tabs
+        self.tabs = QTabWidget()
+        try:
+            self.tabs.addTab(UserComplaintsTab(user_id, token, allow_edit=True), "📝 My Complaints")
+            self.tabs.addTab(UserComplaintsTab(user_id, token, upvoted=True), "👍 Upvoted")
+        except Exception as e:
+            print(f"[ERROR] Failed to load complaint tabs: {e}")
+            self.tabs.addTab(QLabel("Error loading complaints."), "Error")
+
+        self.layout.addWidget(self.tabs)
+
+        # Authority section
+        if self.is_authority:
+            try:
+                authority_button = QPushButton("🛠 Complaints Under You")
+                authority_button.clicked.connect(self.open_authority_complaints)
+                self.layout.addWidget(authority_button)
+            except Exception as e:
+                print(f"[ERROR] Failed to load authority section: {e}")
+
+        self.container.setLayout(self.layout)
+        self.setCentralWidget(self.container)
+
+    def open_authority_complaints(self):
+        self.auth_window = AuthorityComplaintWindow.AuthorityComplaintWindow(self.token)
+        self.auth_window.show()
 
 
 class UserComplaintsTab(QWidget):
@@ -30,6 +60,10 @@ class UserComplaintsTab(QWidget):
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
+
+        # Add debug label to confirm tab is loading
+        self.layout.addWidget(QLabel("🔍 Loading complaints..."))
+
         self.load_complaints()
 
     def load_complaints(self):
@@ -44,10 +78,11 @@ class UserComplaintsTab(QWidget):
                 url = "http://127.0.0.1:8000/complaint/api/complaints/mine/"
 
             response = requests.get(url, headers=headers)
+            print("🔄 API Response Code:", response.status_code)
+            print("🔄 API Response Body:", response.text)
 
             if response.status_code == 200:
                 data = response.json()
-
                 if data:
                     for c in data:
                         complaint_layout = QVBoxLayout()
@@ -59,11 +94,16 @@ class UserComplaintsTab(QWidget):
 
                         if self.allow_edit:
                             edit_button = QPushButton("✏️ Edit")
-                            edit_button.clicked.connect(lambda _, cid=c['id'], title=c['title'], desc=c['description']: self.edit_complaint(cid, title, desc))
+                            edit_button.clicked.connect(
+                                lambda _, cid=c['id'], title=c['title'], desc=c['description']:
+                                self.edit_complaint(cid, title, desc)
+                            )
                             complaint_layout.addWidget(edit_button)
 
                             delete_button = QPushButton("🗑️ Delete")
-                            delete_button.clicked.connect(lambda _, cid=c['id']: self.delete_complaint(cid))
+                            delete_button.clicked.connect(
+                                lambda _, cid=c['id']: self.delete_complaint(cid)
+                            )
                             complaint_layout.addWidget(delete_button)
 
                         complaint_widget = QWidget()
@@ -71,10 +111,9 @@ class UserComplaintsTab(QWidget):
                         self.layout.addWidget(complaint_widget)
                         self.layout.addWidget(QLabel("—" * 80))
                 else:
-                    self.layout.addWidget(QLabel("No complaints found."))
+                    self.layout.addWidget(QLabel("📭 No complaints found."))
             else:
-                self.layout.addWidget(QLabel("❌ Failed to load complaints."))
-
+                self.layout.addWidget(QLabel(f"❌ Failed to load complaints: {response.status_code}"))
         except Exception as e:
             self.layout.addWidget(QLabel("❌ Error occurred while loading complaints."))
             print("Error:", str(e))
@@ -133,3 +172,5 @@ class UserComplaintsTab(QWidget):
             if widget:
                 widget.deleteLater()
         self.load_complaints()
+
+        

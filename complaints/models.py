@@ -96,6 +96,8 @@ COMPLAINT_TYPE_CHOICES = [
 ]
 
 
+
+
 class Complaint(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -138,19 +140,25 @@ class Complaint(models.Model):
     def save(self, *args, **kwargs):
         # Auto-assign lowest level authority if not assigned
         if self.assigned_authority is None:
-            from admin_panel.models import Authority  # 🔄 Adjust import based on your structure
-            authority = Authority.objects.filter(priority=1).first()
-            self.assigned_authority = authority.user if authority else None
+            try:
+                from admin_panel.models import Authority  # 🔄 Adjust app name if needed
+                authority = Authority.objects.filter(priority=1).first()
+                if authority:
+                    self.assigned_authority = authority.user
+            except Exception:
+                pass  # Optionally log this
         super().save(*args, **kwargs)
+
+    def total_upvotes(self):
+        """Returns the total number of upvotes."""
+        return self.upvotes.count()
 
     def __str__(self):
         return f"Complaint #{self.id} - {self.title}"
 
-    def total_upvotes(self):
-        return self.upvotes.count()
-
     class Meta:
         ordering = ['-created_at']
+
 
 
 class Upvote(models.Model):

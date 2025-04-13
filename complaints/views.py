@@ -56,6 +56,9 @@ def upvote_complaint(request):
     user = request.user
     complaint_id = request.data.get("complaint_id")
 
+    if not complaint_id:
+        return Response({"error": "Complaint ID is required"}, status=400)
+
     try:
         complaint = Complaint.objects.get(id=complaint_id)
 
@@ -63,18 +66,16 @@ def upvote_complaint(request):
         if Upvote.objects.filter(user=user, complaint=complaint).exists():
             return Response({"message": "Already upvoted"}, status=200)
 
-        # Save in the separate Upvote model
+        # Save in the Upvote model
         Upvote.objects.create(user=user, complaint=complaint)
 
-        # ✅ ALSO save in the ManyToManyField
-        # complaint.upvotes.add(user)
+        # ✅ Also update the ManyToManyField
+        complaint.upvotes.add(user)
 
         return Response({"message": "Upvoted successfully"}, status=201)
 
     except Complaint.DoesNotExist:
         return Response({"error": "Complaint not found"}, status=404)
-    
-
 
 
 from django.http import JsonResponse

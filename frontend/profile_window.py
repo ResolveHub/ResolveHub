@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QTabWidget,
     QInputDialog, QMessageBox
 )
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QTabWidget, QInputDialog, QMessageBox
 import requests
 from authority_complaints_window import AuthorityComplaintWindow
 
@@ -16,6 +18,8 @@ class ProfileWindow(QMainWindow):
 
         self.setWindowTitle("👤 Your Profile")
         self.setGeometry(300, 300, 700, 500)
+
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowMaximizeButtonHint & ~Qt.WindowMinimizeButtonHint)
         
          # Apply dark theme
         self.apply_dark_theme()

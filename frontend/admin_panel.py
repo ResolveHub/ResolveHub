@@ -145,3 +145,4 @@ if __name__ == "__main__":
     window.show()
     sys.exit(app.exec_())
 
+# This code is a simple admin panel for managing user roles and priorities in a system. It uses PyQt5 for the GUI and SQLite for the database.

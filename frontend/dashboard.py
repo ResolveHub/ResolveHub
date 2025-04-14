@@ -117,14 +117,16 @@ import requests
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout,
     QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
-    QMessageBox, QComboBox, QTextEdit, QMainWindow
+    QMessageBox, QComboBox, QTextEdit, QMainWindow, QFileDialog
 )
 from PyQt5.QtCore import Qt
+
 
 # Replace with your API URLs
 BASE_URL = "http://127.0.0.1:8000/complaint/api/complaints/"
 SEARCH_URL = "http://127.0.0.1:8000/complaint/api/search/"
 CONFIRM_RESOLUTION_URL = "http://127.0.0.1:8000/complaint/api/confirm/"
+GENERATE_REPORT_URL = "http://127.0.0.1:8000/complaint/api/report/"
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QLabel, QMessageBox
 import requests
@@ -287,6 +289,16 @@ class ComplaintApp(QMainWindow):
         )
         complaint_layout.addWidget(upvote_widget)
 
+
+
+        # Add download button for each complaint
+        buttons_layout = QHBoxLayout() 
+        download_button = QPushButton("📥 Download Report")
+        download_button.clicked.connect(lambda checked, cid=c['id']: self.download_report(cid))
+        buttons_layout.addWidget(download_button)
+
+        complaint_layout.addLayout(buttons_layout)
+
         complaint_widget = QWidget()
         complaint_widget.setLayout(complaint_layout)
         complaint_widget.setStyleSheet(
@@ -389,6 +401,29 @@ class ComplaintApp(QMainWindow):
         else:
             QMessageBox.critical(self, "Error", "Failed to submit your confirmation.")
 
+    def download_report(self, complaint_id=None):
+        try:
+            filename, _ = QFileDialog.getSaveFileName(
+                self,
+                "Save Report",
+                "complaint_report.pdf",
+                "PDF Files (*.pdf)"
+            )
+            if not filename:  # User cancelled
+                return
+                
+            headers = {"Authorization": f"Bearer {self.token}"}
+            url = f"{GENERATE_REPORT_URL}{complaint_id}/" if complaint_id else GENERATE_REPORT_URL
+            response = requests.get(url, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                with open(filename, "wb") as f:
+                    f.write(response.content)
+                QMessageBox.information(self, "Report Downloaded", f"Report saved as {filename}")
+            else:
+                QMessageBox.critical(self, "Download Failed", f"Server returned status code: {response.status_code}")
+        except Exception as e:
+            QMessageBox.critical(self, "Download Failed", f"Error: {str(e)}")
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ComplaintApp(

@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QTabWidget, QInputDialog, QMessageBox,  QScrollArea
 import requests
-from authority_complaints_window import AuthorityComplaintWindow
+from .authority_complaints_window import AuthorityComplaintWindow
 
 class ProfileWindow(QMainWindow):
     def __init__(self, user_id, token, is_authority=False, dashboard_window=None, login_window=None, parent=None):
@@ -16,6 +16,7 @@ class ProfileWindow(QMainWindow):
         self.dashboard_window = dashboard_window
         self.login_window = login_window
         self.showMaximized()
+       
 
         self.setWindowTitle("👤 Your Profile")
         self.setGeometry(300, 300, 700, 500)
@@ -86,8 +87,8 @@ class ProfileWindow(QMainWindow):
 
 class UserComplaintsTab(QWidget):
    
-    def __init__(self, user_id, token, allow_edit=False, upvoted=False):
-        super().__init__()
+    def _init_(self, user_id, token, allow_edit=False, upvoted=False):
+        super()._init_()
         self.user_id = user_id
         self.token = token
         self.allow_edit = allow_edit
@@ -98,6 +99,8 @@ class UserComplaintsTab(QWidget):
 
         self.layout.addWidget(QLabel("🔍 Loading complaints..."))
         self.load_complaints()
+
+
     def load_complaints(self):
         self.setGeometry(100, 100, 900, 700)
         try:
@@ -111,31 +114,37 @@ class UserComplaintsTab(QWidget):
             print("🔄 API Response Body:", response.text)
             scroll = QScrollArea()
             scroll.setWidgetResizable(True)
-            # scroll.setStyleSheet("background-color: #111; border: none;")
+            scroll.setStyleSheet("background-color: #1e1e2f; border: none;")  # Match dark theme
+
             container = QWidget()
             complaint_list_layout = QVBoxLayout(container)
             if response.status_code == 200:
                 data = response.json()
-                
+
                 if data:
                     for c in data:
                         complaint_layout = QVBoxLayout()
+                        
+                        # Complaint text styling
                         complaint_text = QLabel(f"📌 Title: {c['title']}\n📝 Description: {c['description']} \n Status: {c['status']}")
                         complaint_text.setWordWrap(True)
+                        complaint_text.setStyleSheet("color: #f5f5f5; font-size: 16px; background-color: #2f2f3f; padding: 10px; border-radius: 5px;")
                         complaint_layout.addWidget(complaint_text)
 
+                        # Upvote count styling
                         upvote_count_label = QLabel(f"👍 Total Upvotes: {c.get('total_upvotes', 0)}")
+                        upvote_count_label.setStyleSheet("color: #f5f5f5; font-size: 14px;")
                         complaint_layout.addWidget(upvote_count_label)
 
                         if self.allow_edit:
-                            edit_button = QPushButton("✏️ Edit")
+                            edit_button = QPushButton("✏ Edit")
                             edit_button.clicked.connect(
                                 lambda _, cid=c['id'], title=c['title'], desc=c['description']:
                                 self.edit_complaint(cid, title, desc)
                             )
                             complaint_layout.addWidget(edit_button)
 
-                            delete_button = QPushButton("🗑️ Delete")
+                            delete_button = QPushButton("🗑 Delete")
                             delete_button.clicked.connect(
                                 lambda _, cid=c['id']: self.delete_complaint(cid)
                             )
@@ -143,21 +152,28 @@ class UserComplaintsTab(QWidget):
 
                         complaint_widget = QWidget()
                         complaint_widget.setLayout(complaint_layout)
+                        complaint_widget.setStyleSheet("background-color: #2f2f3f; border: 1px solid #3a3a3a; border-radius: 5px; padding: 10px; margin-bottom: 10px;")
                         complaint_list_layout.addWidget(complaint_widget)
-                        complaint_list_layout.addWidget(QLabel("—" * 80))
 
                         separator = QLabel(" ")
                         separator.setFixedHeight(15)
                         complaint_list_layout.addWidget(separator)
                 else:
-                    self.layout.addWidget(QLabel("📭 No complaints found."))
+                    no_complaints_label = QLabel("📭 No complaints found.")
+                    no_complaints_label.setStyleSheet("color: #f5f5f5; font-size: 16px;")
+                    self.layout.addWidget(no_complaints_label)
             else:
-                self.layout.addWidget(QLabel(f"❌ Failed to load complaints: {response.status_code}"))
+                error_label = QLabel(f"❌ Failed to load complaints: {response.status_code}")
+                error_label.setStyleSheet("color: #f5f5f5; font-size: 16px;")
+                self.layout.addWidget(error_label)
+
             scroll.setWidget(container)
             self.layout.addWidget(scroll)
-            
+
         except Exception as e:
-            self.layout.addWidget(QLabel("❌ Error occurred while loading complaints."))
+            error_label = QLabel("❌ Error occurred while loading complaints.")
+            error_label.setStyleSheet("color: #f5f5f5; font-size: 16px;")
+            self.layout.addWidget(error_label)
             print("Error:", str(e))
 
     def edit_complaint(self, complaint_id, old_title, old_description):
@@ -214,4 +230,3 @@ class UserComplaintsTab(QWidget):
             if widget:
                 widget.deleteLater()
         self.load_complaints()
-        

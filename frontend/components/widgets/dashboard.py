@@ -4,10 +4,10 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 import requests
-from frontend.components.widgets.upvote import UpvoteWidget
+from upvote import UpvoteWidget
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QWidget, QVBoxLayout
-from frontend.components.widgets.profile_window import ProfileWindow
-from frontend.components.widgets.complaint import ComplaintApp
+from profile_window import ProfileWindow
+from complaint import ComplaintApp
 
 
 

@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QTabWidget, QInputDialog, QMessageBox,  QScrollArea
 import requests
-from frontend.components.widgets.authority_complaints_window import AuthorityComplaintWindow
+from authority_complaints_window import AuthorityComplaintWindow
 
 class ProfileWindow(QMainWindow):
     def __init__(self, user_id, token, is_authority=False, dashboard_window=None, login_window=None, parent=None):
@@ -60,7 +60,7 @@ class ProfileWindow(QMainWindow):
 
     def apply_dark_theme(self):
         try:
-            with open("dark_theme.qss", "r") as file:
+            with open("components/ui_qss/dark_theme.qss", "r") as file:
                 self.setStyleSheet(file.read())
         except FileNotFoundError:
             print("Dark theme QSS file not found.")

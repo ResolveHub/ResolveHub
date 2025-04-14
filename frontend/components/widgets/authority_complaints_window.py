@@ -32,7 +32,7 @@ class AuthorityComplaintWindow(QWidget):
         self.load_complaints()
     def apply_dark_theme(self):
         try:
-            with open("dark_theme.qss", "r") as file:
+            with open("components/ui_qss/dark_theme.qss", "r") as file:
                 self.setStyleSheet(file.read())
         except FileNotFoundError:
             print("Dark theme QSS file not found.")

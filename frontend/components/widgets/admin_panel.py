@@ -12,7 +12,7 @@ class AdminPanel(QMainWindow):
         super().__init__()
         self.setWindowTitle("Admin Panel")
         self.setMinimumSize(600, 500)
-        self.setStyleSheet(open("admin_panel.qss").read())  # Load the external .qss file
+        self.setStyleSheet(open("components/ui_qss/admin_panel.qss").read())  # Load the external .qss file
         self.showMaximized()
 
         # Central Widget

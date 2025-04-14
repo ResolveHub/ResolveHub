@@ -17,7 +17,7 @@ class SignupWindow(QMainWindow):
         self.setMinimumSize(600, 500)
         self.showMaximized()
 
-        with open("signup.qss", "r") as file:
+        with open("components/ui_qss/signup.qss", "r") as file:
             self.setStyleSheet(file.read())
 
         self.login_window = login_window

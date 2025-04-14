@@ -6,7 +6,7 @@ import requests
 class ResetPasswordWindow(QMainWindow):
     def __init__(self, login_window=None): 
         super().__init__()
-        uic.loadUi("reset_password.ui", self)
+        uic.loadUi("components/ui_qss/reset_password.ui", self)
 
         self.login_window = login_window  
         self.sendOtpButton.clicked.connect(self.send_otp)

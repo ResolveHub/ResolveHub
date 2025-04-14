@@ -101,7 +101,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # Optional: apply QSS after testing
-    with open("login.qss", "r") as file:
+    with open("components/ui_qss/login.qss", "r") as file:
         app.setStyleSheet(file.read())
 
     window = LoginWindow()

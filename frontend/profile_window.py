@@ -99,6 +99,7 @@ class UserComplaintsTab(QWidget):
         self.layout.addWidget(QLabel("🔍 Loading complaints..."))
         self.load_complaints()
     def load_complaints(self):
+        self.setGeometry(100, 100, 900, 700)
         try:
             headers = {
                 "Authorization": f"Bearer {self.token}"

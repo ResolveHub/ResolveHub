@@ -147,8 +147,8 @@ class UpvoteWidget(QWidget):
         self.layout.addWidget(self.upvote_button)
 
         # Add status label
-        self.status_label = QLabel("")
-        self.layout.addWidget(self.status_label)
+        #self.status_label = QLabel("")
+        #self.layout.addWidget(self.status_label)
 
     def toggle_upvote(self):
         if self.already_upvoted:
@@ -178,13 +178,13 @@ class UpvoteWidget(QWidget):
             if response.status_code in [200, 201]:
                 self.already_upvoted = True
                 self.upvote_button.setText("✅ Upvoted")
-                self.status_label.setText("✅ Upvoted successfully!")
+               # self.status_label.setText("✅ Upvoted successfully!")
             else:
-                self.status_label.setText("❌ Failed to upvote.")
+                #self.status_label.setText("❌ Failed to upvote.")
                 print("Error:", response.json())
 
         except Exception as e:
-            self.status_label.setText("❌ Error occurred.")
+           # self.status_label.setText("❌ Error occurred.")
             print("Exception:", str(e))
 
     def remove_upvote(self):
@@ -201,13 +201,13 @@ class UpvoteWidget(QWidget):
             if response.status_code == 200:
                 self.already_upvoted = False
                 self.upvote_button.setText("👍 Upvote")
-                self.status_label.setText("✅ Upvote removed successfully!")
+                #self.status_label.setText("✅ Upvote removed successfully!")
             else:
-                self.status_label.setText("❌ Failed to remove upvote.")
+                #elf.status_label.setText("❌ Failed to remove upvote.")
                 print("Error:", response.json())
 
         except Exception as e:
-            self.status_label.setText("❌ Error occurred.")
+            #self.status_label.setText("❌ Error occurred.")
             print("Exception:", str(e))
 
 
@@ -272,7 +272,7 @@ class ComplaintApp(QMainWindow):
             print("Error:", str(e))
 
     def display_complaint(self, c):
-        complaint_layout = QVBoxLayout()
+        complaint_layout = QHBoxLayout()
         self.setGeometry(100, 100, 900, 700)
 
         complaint_text = QLabel(f"📌 Title: {c['title']}\n📝 Description: {c['description']}\n📅 Created: {c['created_at']} \n Status: {c['status']}")
@@ -280,7 +280,9 @@ class ComplaintApp(QMainWindow):
         complaint_layout.addWidget(complaint_text)
 
         upvote_count_label = QLabel(f"👍 Total Upvotes: {c.get('total_upvotes', 0)}")
+        upvote_count_label.setStyleSheet("border: none; background: transparent; padding: 0; margin: 0;")
         complaint_layout.addWidget(upvote_count_label)
+
 
         upvote_widget = UpvoteWidget(
             token=self.token,

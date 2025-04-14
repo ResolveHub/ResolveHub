@@ -12,7 +12,7 @@ class AuthorityComplaintWindow(QWidget):
         self.token = token
         self.setWindowTitle("🛠 Complaints Under Your Authority")
         self.setGeometry(200, 200, 700, 500)
-
+        self.apply_dark_theme()
         self.layout = QVBoxLayout()
 
         self.refresh_button = QPushButton("🔄 Refresh Complaints")
@@ -30,7 +30,13 @@ class AuthorityComplaintWindow(QWidget):
         self.setLayout(self.layout)
 
         self.load_complaints()
-
+    def apply_dark_theme(self):
+        try:
+            with open("dark_theme.qss", "r") as file:
+                self.setStyleSheet(file.read())
+        except FileNotFoundError:
+            print("Dark theme QSS file not found.")
+            
     def load_complaints(self):
         url = "http://127.0.0.1:8000/complaint/api/complaints/under-you/"
         headers = {

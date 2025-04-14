@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QInputDialog, QMessageBox
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QTabWidget, QInputDialog, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QTabWidget, QInputDialog, QMessageBox,  QScrollArea
 import requests
 from authority_complaints_window import AuthorityComplaintWindow
 
@@ -15,6 +15,7 @@ class ProfileWindow(QMainWindow):
         self.is_authority = is_authority
         self.dashboard_window = dashboard_window
         self.login_window = login_window
+        self.showMaximized()
 
         self.setWindowTitle("👤 Your Profile")
         self.setGeometry(300, 300, 700, 500)
@@ -107,13 +108,19 @@ class UserComplaintsTab(QWidget):
             response = requests.get(url, headers=headers)
             print("🔄 API Response Code:", response.status_code)
             print("🔄 API Response Body:", response.text)
-
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            # scroll.setStyleSheet("background-color: #111; border: none;")
+            container = QWidget()
+            complaint_list_layout = QVBoxLayout(container)
             if response.status_code == 200:
                 data = response.json()
+                
                 if data:
                     for c in data:
                         complaint_layout = QVBoxLayout()
                         complaint_text = QLabel(f"📌 Title: {c['title']}\n📝 Description: {c['description']} \n Status: {c['status']}")
+                        complaint_text.setWordWrap(True)
                         complaint_layout.addWidget(complaint_text)
 
                         upvote_count_label = QLabel(f"👍 Total Upvotes: {c.get('total_upvotes', 0)}")
@@ -135,12 +142,19 @@ class UserComplaintsTab(QWidget):
 
                         complaint_widget = QWidget()
                         complaint_widget.setLayout(complaint_layout)
-                        self.layout.addWidget(complaint_widget)
-                        self.layout.addWidget(QLabel("—" * 80))
+                        complaint_list_layout.addWidget(complaint_widget)
+                        complaint_list_layout.addWidget(QLabel("—" * 80))
+
+                        separator = QLabel(" ")
+                        separator.setFixedHeight(15)
+                        complaint_list_layout.addWidget(separator)
                 else:
                     self.layout.addWidget(QLabel("📭 No complaints found."))
             else:
                 self.layout.addWidget(QLabel(f"❌ Failed to load complaints: {response.status_code}"))
+            scroll.setWidget(container)
+            self.layout.addWidget(scroll)
+            
         except Exception as e:
             self.layout.addWidget(QLabel("❌ Error occurred while loading complaints."))
             print("Error:", str(e))

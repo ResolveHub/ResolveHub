@@ -4,20 +4,17 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 import requests
-# from upvote import UpvoteWidget
+from upvote import UpvoteWidget
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QWidget, QVBoxLayout
-from .upvote import UpvoteWidget  # Update import path
-from frontend.components.widgets.profile_window import ProfileWindow
-
-
-
+from profile_window import ProfileWindow
+from complaint import ComplaintApp
 
 
 
 
 class DashboardWindow(QMainWindow):
-    def _init_(self, token, user_id, login_window):
-        super()._init_()
+    def __init__(self, token, user_id, login_window):
+        super().__init__()
         self.token = token
         self.user_id = user_id
         self.login_window = login_window
@@ -135,8 +132,8 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QLabel, QMessageB
 import requests
 
 class UpvoteWidget(QWidget):
-    def _init_(self, token, complaint_id, already_upvoted=False):
-        super()._init_()
+    def __init__(self, token, complaint_id, already_upvoted=False):
+        super().__init__()
         self.token = token
         self.complaint_id = complaint_id
         self.already_upvoted = already_upvoted
@@ -216,8 +213,8 @@ class UpvoteWidget(QWidget):
 
 
 class ComplaintApp(QMainWindow):
-    def _init_(self, user_id, token):
-        super()._init_()
+    def __init__(self, user_id, token):
+        super().__init__()
         self.user_id = user_id
         self.token = token
 

@@ -86,13 +86,13 @@ class LoginWindow(QMainWindow):
             print("Login failed:", error_data)
 
     def open_signup(self):
-        from signup import SignupWindow
+        from frontend.components.widgets.signup import SignupWindow
         self.signup_window = SignupWindow(self)
         self.signup_window.show()
         self.hide()
 
     def open_reset_password(self):
-        from reset_password import ResetPasswordWindow
+        from frontend.components.widgets.reset_password import ResetPasswordWindow
         self.reset_password_window = ResetPasswordWindow(self)
         self.reset_password_window.show()
         self.hide()

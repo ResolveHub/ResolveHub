@@ -4,10 +4,10 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 import requests
-from upvote import UpvoteWidget
+from frontend.components.widgets.upvote import UpvoteWidget
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QWidget, QVBoxLayout
-from profile_window import ProfileWindow
-from complaint import ComplaintApp
+from frontend.components.widgets.profile_window import ProfileWindow
+from frontend.components.widgets.complaint import ComplaintApp
 
 
 
@@ -64,13 +64,9 @@ class DashboardWindow(QMainWindow):
         profile_button.clicked.connect(self.open_profile)
         main_layout.addWidget(profile_button)
 
-    # def open_profile(self):
-    #     self.profile_window = ProfileWindow(self.user_id, self.token)
-    #     self.profile_window.show()
     def open_profile(self):
-        self.profile_window = ProfileWindow(self.user_id, self.token, self, self.login_window)
+        self.profile_window = ProfileWindow(self.user_id, self.token, self, dashboard_window=self, login_window=self.login_window)
         self.profile_window.show()
-
      
 
     def create_complaint(self):
@@ -110,77 +106,12 @@ class DashboardWindow(QMainWindow):
                 QMessageBox.information(self, "Success", "Complaint created successfully.")
                 self.complaint_app.reload_complaints()
             else:
-                QMessageBox.critical(self, "Error", "Failed to record your response.")
                 QMessageBox.warning(self, "Error", f"Failed to create complaint.\n{response.text}")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
 
 
-# class ComplaintApp(QWidget):
-#     def __init__(self, user_id, token):
-#         super().__init__()
-#         self.user_id = user_id
-#         self.token = token
 
-#         self.layout = QVBoxLayout()
-#         self.setLayout(self.layout)
-
-#         self.load_complaints()
-
-#     def reload_complaints(self):
-#         for i in reversed(range(self.layout.count())):
-#             widget = self.layout.itemAt(i).widget()
-#             if widget:
-#                 widget.deleteLater()
-#         self.load_complaints()
-
-#     def load_complaints(self):
-#         try:
-#             headers = {
-#                 "Authorization": f"Bearer {self.token}"
-#             }
-#             url = "http://127.0.0.1:8000/complaint/api/complaints/"
-#             response = requests.get(url, headers=headers)
-
-#             if response.status_code == 200:
-#                 data = response.json()
-
-#                 if data:
-#                     for c in data:
-#                         complaint_layout = QVBoxLayout()
-
-#                         complaint_text = QLabel(f"📌 Title: {c['title']}\n📝 Description: {c['description']}\n📅 Created: {c['created_at']}")
-#                         complaint_text.setWordWrap(True)
-#                         complaint_text.setObjectName("complaintText")
-#                         complaint_layout.addWidget(complaint_text)
-
-#                         upvote_count_label = QLabel(f"👍 Total Upvotes: {c.get('total_upvotes', 0)}")
-#                         upvote_count_label.setObjectName("upvoteCount")
-#                         complaint_layout.addWidget(upvote_count_label)
-
-#                         upvote_widget = UpvoteWidget(
-#                             token=self.token,
-#                             complaint_id=c['id'],
-#                             already_upvoted=c.get('already_upvoted', False)
-#                         )
-#                         complaint_layout.addWidget(upvote_widget)
-
-#                         complaint_widget = QWidget()
-#                         complaint_widget.setObjectName("complaintBox")
-#                         complaint_widget.setLayout(complaint_layout)
-#                         complaint_widget.setStyleSheet(
-#                             "border: 1px solid gray; border-radius: 8px; padding: 10px; margin: 10px;"
-#                         )
-#                         self.layout.addWidget(complaint_widget)
-
-#                         self.layout.addWidget(QLabel(" "))
-#                 else:
-#                     self.layout.addWidget(QLabel("No complaints found."))
-#             else:
-#                 self.layout.addWidget(QLabel("❌ Failed to load complaints."))
-#         except Exception as e:
-#             self.layout.addWidget(QLabel("❌ Error occurred while loading complaints."))
-#             print("Error:", str(e))
 import sys
 import requests
 from PyQt5.QtWidgets import (
@@ -190,11 +121,15 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 
+
 # Replace with your API URLs
 BASE_URL = "http://127.0.0.1:8000/complaint/api/complaints/"
 SEARCH_URL = "http://127.0.0.1:8000/complaint/api/search/"
 CONFIRM_RESOLUTION_URL = "http://127.0.0.1:8000/complaint/api/confirm/"
 GENERATE_REPORT_URL = "http://127.0.0.1:8000/complaint/api/report/"
+
+from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QLabel, QMessageBox
+import requests
 
 class UpvoteWidget(QWidget):
     def __init__(self, token, complaint_id, already_upvoted=False):
@@ -206,20 +141,76 @@ class UpvoteWidget(QWidget):
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
 
-        self.upvote_button = QPushButton("👍 Upvote" if not self.already_upvoted else "✅ Upvoted")
-        self.upvote_button.setEnabled(not self.already_upvoted)
-        self.upvote_button.clicked.connect(self.send_upvote)
+        # Add upvote button
+        self.upvote_button = QPushButton("✅ Upvoted" if self.already_upvoted else "👍 Upvote")
+        self.upvote_button.clicked.connect(self.toggle_upvote)
         self.layout.addWidget(self.upvote_button)
 
-    def send_upvote(self):
-        headers = {"Authorization": f"Bearer {self.token}"}
-        response = requests.post(BASE_URL + f"{self.complaint_id}/upvote/", headers=headers)
+        # Add status label
+        #self.status_label = QLabel("")
+        #self.layout.addWidget(self.status_label)
 
-        if response.status_code == 200:
-            self.upvote_button.setText("✅ Upvoted")
-            self.upvote_button.setEnabled(False)
+    def toggle_upvote(self):
+        if self.already_upvoted:
+            # Ask for confirmation before removing upvote
+            confirm = QMessageBox.question(
+                self,
+                "Remove Upvote",
+                "Are you sure you want to remove your upvote?",
+                QMessageBox.Yes | QMessageBox.No
+            )
+            if confirm == QMessageBox.Yes:
+                self.remove_upvote()
         else:
-            QMessageBox.warning(self, "Error", "Failed to upvote complaint.")
+            self.add_upvote()
+
+    def add_upvote(self):
+        headers = {
+            "Authorization": f"Bearer {self.token}"
+        }
+        data = {
+            "complaint_id": self.complaint_id
+        }
+
+        try:
+            response = requests.post("http://127.0.0.1:8000/complaint/api/complaints/upvote/", json=data, headers=headers)
+
+            if response.status_code in [200, 201]:
+                self.already_upvoted = True
+                self.upvote_button.setText("✅ Upvoted")
+               # self.status_label.setText("✅ Upvoted successfully!")
+            else:
+                #self.status_label.setText("❌ Failed to upvote.")
+                print("Error:", response.json())
+
+        except Exception as e:
+           # self.status_label.setText("❌ Error occurred.")
+            print("Exception:", str(e))
+
+    def remove_upvote(self):
+        headers = {
+            "Authorization": f"Bearer {self.token}"
+        }
+        data = {
+            "complaint_id": self.complaint_id
+        }
+
+        try:
+            response = requests.post("http://127.0.0.1:8000/complaint/api/complaints/remove-upvote/", json=data, headers=headers)
+
+            if response.status_code == 200:
+                self.already_upvoted = False
+                self.upvote_button.setText("👍 Upvote")
+                #self.status_label.setText("✅ Upvote removed successfully!")
+            else:
+                #elf.status_label.setText("❌ Failed to remove upvote.")
+                print("Error:", response.json())
+
+        except Exception as e:
+            #self.status_label.setText("❌ Error occurred.")
+            print("Exception:", str(e))
+
+
 
 class ComplaintApp(QMainWindow):
     def __init__(self, user_id, token):
@@ -245,10 +236,10 @@ class ComplaintApp(QMainWindow):
         self.load_button.clicked.connect(self.reload_complaints)
         self.layout.addWidget(self.load_button)
 
-        # # Add download report button
-        # self.download_button = QPushButton("📥 Download Report")
-        # self.download_button.clicked.connect(self.download_report)
-        # self.layout.addWidget(self.download_button)
+        # self.create_button = QPushButton("➕ Create Complaint")
+        # self.create_button.clicked.connect(self.create_complaint_ui)
+        # self.layout.addWidget(self.create_button)
+
 
         self.complaints_container = QVBoxLayout()
         self.layout.addLayout(self.complaints_container)
@@ -266,6 +257,7 @@ class ComplaintApp(QMainWindow):
         try:
             headers = {"Authorization": f"Bearer {self.token}"}
             response = requests.get(BASE_URL, headers=headers)
+            # response = requests.get("http://127.0.0.1:8000/complaint/api/complaints/", headers=headers)
 
             if response.status_code == 200:
                 data = response.json()
@@ -281,33 +273,29 @@ class ComplaintApp(QMainWindow):
             print("Error:", str(e))
 
     def display_complaint(self, c):
-        complaint_layout = QVBoxLayout()
+        complaint_layout = QHBoxLayout()
         self.setGeometry(100, 100, 900, 700)
 
-        # Handle optional fields with get() method
-        complaint_text = QLabel(
-            f"📌 Title: {c.get('title', 'N/A')}\n"
-            f"📝 Description: {c.get('description', 'N/A')}\n"
-            f"📅 Created: {c.get('created_at', 'N/A')}\n"
-            f"Status: {c.get('status', 'N/A')}"
-        )
+        complaint_text = QLabel(f"📌 Title: {c['title']}\n📝 Description: {c['description']}\n📅 Created: {c['created_at']} \n Status: {c['status']}")
         complaint_text.setWordWrap(True)
         complaint_layout.addWidget(complaint_text)
 
-        # Add buttons layout
-        buttons_layout = QHBoxLayout()
-        
-        upvote_count_label = QLabel(f"👍 Total Upvotes: {c.get('total_upvotes', 0)}")
-        complaint_layout.addWidget(upvote_count_label)
+        # upvote_count_label = QLabel(f"👍 Total Upvotes: {c.get('total_upvotes', 0)}")
+        # upvote_count_label.setStyleSheet("border: none; background: transparent; padding: 0; margin: 0;")
+        # complaint_layout.addWidget(upvote_count_label)
+
 
         upvote_widget = UpvoteWidget(
             token=self.token,
             complaint_id=c['id'],
             already_upvoted=c.get('already_upvoted', False)
         )
-        buttons_layout.addWidget(upvote_widget)
+        complaint_layout.addWidget(upvote_widget)
+
+
 
         # Add download button for each complaint
+        buttons_layout = QHBoxLayout() 
         download_button = QPushButton("📥 Download Report")
         download_button.clicked.connect(lambda checked, cid=c['id']: self.download_report(cid))
         buttons_layout.addWidget(download_button)
@@ -333,7 +321,6 @@ class ComplaintApp(QMainWindow):
         headers = {"Authorization": f"Bearer {self.token}"}
         response = requests.get(SEARCH_URL, params={"q": query}, headers=headers)
 
-        # Clear existing complaints first
         for i in reversed(range(self.complaints_container.count())):
             widget = self.complaints_container.itemAt(i).widget()
             if widget:
@@ -341,11 +328,12 @@ class ComplaintApp(QMainWindow):
 
         if response.status_code == 200:
             complaints = response.json()
-            print(complaints)  # Debug print
+            print(complaints)
             if complaints:
                 for complaint in complaints:
                     self.display_complaint(complaint)
-        # Don't add the "No matching complaints" label as it affects our tests
+            else:
+                self.complaints_container.addWidget(QLabel("No matching complaints found."))
         else:
             QMessageBox.critical(self, "Search Failed", "Failed to search complaints.")
 
@@ -414,7 +402,7 @@ class ComplaintApp(QMainWindow):
         if response.status_code == 200:
             QMessageBox.information(self, "Thank you", "Your response has been recorded.")
         else:
-            QMessageBox.critical(self, "Error", "Failed to record your response.")
+            QMessageBox.critical(self, "Error", "Failed to submit your confirmation.")
 
     def download_report(self, complaint_id=None):
         try:
@@ -439,7 +427,6 @@ class ComplaintApp(QMainWindow):
                 QMessageBox.critical(self, "Download Failed", f"Server returned status code: {response.status_code}")
         except Exception as e:
             QMessageBox.critical(self, "Download Failed", f"Error: {str(e)}")
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ComplaintApp(

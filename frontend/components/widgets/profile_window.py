@@ -2,9 +2,10 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QTabWidget,
     QInputDialog, QMessageBox
 )
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QTabWidget, QInputDialog, QMessageBox,  QScrollArea
 import requests
-import authority_complaints_window as AuthorityComplaintWindow
-
+from frontend.components.widgets.authority_complaints_window import AuthorityComplaintWindow
 
 class ProfileWindow(QMainWindow):
     def __init__(self, user_id, token, is_authority=False, dashboard_window=None, login_window=None, parent=None):
@@ -14,9 +15,15 @@ class ProfileWindow(QMainWindow):
         self.is_authority = is_authority
         self.dashboard_window = dashboard_window
         self.login_window = login_window
+        self.showMaximized()
 
         self.setWindowTitle("👤 Your Profile")
         self.setGeometry(300, 300, 700, 500)
+
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowMaximizeButtonHint & ~Qt.WindowMinimizeButtonHint)
+        
+         # Apply dark theme
+        self.apply_dark_theme()
 
         # Main layout
         self.container = QWidget()
@@ -41,52 +48,80 @@ class ProfileWindow(QMainWindow):
                 self.layout.addWidget(authority_button)
             except Exception as e:
                 print(f"[ERROR] Failed to load authority section: {e}")
+        self.layout.addWidget(self.tabs)
+
+        # Logout Button
+        logout_button = QPushButton("🚪 Logout")
+        logout_button.clicked.connect(self.logout)
+        self.layout.addWidget(logout_button)
 
         self.container.setLayout(self.layout)
         self.setCentralWidget(self.container)
 
+    def apply_dark_theme(self):
+        try:
+            with open("dark_theme.qss", "r") as file:
+                self.setStyleSheet(file.read())
+        except FileNotFoundError:
+            print("Dark theme QSS file not found.")
+
+    def logout(self):
+        confirm = QMessageBox.question(self, "Logout", "Are you sure you want to logout?", QMessageBox.Yes | QMessageBox.No)
+        if confirm == QMessageBox.Yes:
+            # Close the ProfileWindow
+            self.close()
+
+            # Close the DashboardWindow if it exists
+            if self.dashboard_window:
+                self.dashboard_window.close()
+
+            # Show the LoginWindow if it exists
+            if self.login_window:
+                self.login_window.show()
+
     def open_authority_complaints(self):
-        self.auth_window = AuthorityComplaintWindow.AuthorityComplaintWindow(self.token)
+        self.auth_window = AuthorityComplaintWindow(self.token)
         self.auth_window.show()
 
 
 class UserComplaintsTab(QWidget):
-    def __init__(self, user_id, token, upvoted=False, allow_edit=False):
+   
+    def __init__(self, user_id, token, allow_edit=False, upvoted=False):
         super().__init__()
         self.user_id = user_id
         self.token = token
-        self.upvoted = upvoted
         self.allow_edit = allow_edit
 
+        self.upvoted = upvoted
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        # Add debug label to confirm tab is loading
         self.layout.addWidget(QLabel("🔍 Loading complaints..."))
-
         self.load_complaints()
-
     def load_complaints(self):
+        self.setGeometry(100, 100, 900, 700)
         try:
             headers = {
                 "Authorization": f"Bearer {self.token}"
             }
 
-            if self.upvoted:
-                url = "http://127.0.0.1:8000/complaint/api/complaints/upvoted/"
-            else:
-                url = "http://127.0.0.1:8000/complaint/api/complaints/mine/"
-
+            url = "http://127.0.0.1:8000/complaint/api/complaints/mine/" if not self.upvoted else "http://127.0.0.1:8000/complaint/api/complaints/upvoted/"
             response = requests.get(url, headers=headers)
             print("🔄 API Response Code:", response.status_code)
             print("🔄 API Response Body:", response.text)
-
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            # scroll.setStyleSheet("background-color: #111; border: none;")
+            container = QWidget()
+            complaint_list_layout = QVBoxLayout(container)
             if response.status_code == 200:
                 data = response.json()
+                
                 if data:
                     for c in data:
                         complaint_layout = QVBoxLayout()
                         complaint_text = QLabel(f"📌 Title: {c['title']}\n📝 Description: {c['description']} \n Status: {c['status']}")
+                        complaint_text.setWordWrap(True)
                         complaint_layout.addWidget(complaint_text)
 
                         upvote_count_label = QLabel(f"👍 Total Upvotes: {c.get('total_upvotes', 0)}")
@@ -108,12 +143,19 @@ class UserComplaintsTab(QWidget):
 
                         complaint_widget = QWidget()
                         complaint_widget.setLayout(complaint_layout)
-                        self.layout.addWidget(complaint_widget)
-                        self.layout.addWidget(QLabel("—" * 80))
+                        complaint_list_layout.addWidget(complaint_widget)
+                        complaint_list_layout.addWidget(QLabel("—" * 80))
+
+                        separator = QLabel(" ")
+                        separator.setFixedHeight(15)
+                        complaint_list_layout.addWidget(separator)
                 else:
                     self.layout.addWidget(QLabel("📭 No complaints found."))
             else:
                 self.layout.addWidget(QLabel(f"❌ Failed to load complaints: {response.status_code}"))
+            scroll.setWidget(container)
+            self.layout.addWidget(scroll)
+            
         except Exception as e:
             self.layout.addWidget(QLabel("❌ Error occurred while loading complaints."))
             print("Error:", str(e))
@@ -172,5 +214,4 @@ class UserComplaintsTab(QWidget):
             if widget:
                 widget.deleteLater()
         self.load_complaints()
-
         

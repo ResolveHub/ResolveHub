@@ -48,7 +48,7 @@ class ResetPasswordWindow(QMainWindow):
 
     def open_login(self):
       
-        from login import LoginWindow  
+        from frontend.components.widgets.login import LoginWindow  
         self.login_window = LoginWindow()  
         self.login_window.show()
         self.close() 

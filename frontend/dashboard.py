@@ -240,6 +240,7 @@ class ComplaintApp(QMainWindow):
         # self.create_button.clicked.connect(self.create_complaint_ui)
         # self.layout.addWidget(self.create_button)
 
+
         self.complaints_container = QVBoxLayout()
         self.layout.addLayout(self.complaints_container)
 
@@ -279,9 +280,9 @@ class ComplaintApp(QMainWindow):
         complaint_text.setWordWrap(True)
         complaint_layout.addWidget(complaint_text)
 
-        upvote_count_label = QLabel(f"👍 Total Upvotes: {c.get('total_upvotes', 0)}")
-        upvote_count_label.setStyleSheet("border: none; background: transparent; padding: 0; margin: 0;")
-        complaint_layout.addWidget(upvote_count_label)
+        # upvote_count_label = QLabel(f"👍 Total Upvotes: {c.get('total_upvotes', 0)}")
+        # upvote_count_label.setStyleSheet("border: none; background: transparent; padding: 0; margin: 0;")
+        # complaint_layout.addWidget(upvote_count_label)
 
 
         upvote_widget = UpvoteWidget(

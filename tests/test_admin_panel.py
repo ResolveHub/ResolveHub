@@ -10,103 +10,113 @@ from frontend.components.widgets.admin_panel import AdminPanel
 class TestAdminPanelFrontend:
     @pytest.fixture(autouse=True)
     def setup_panel(self, qtbot):
-        # Mock the QSS file reading to simulate UI styles
+        """Setup test environment"""
+        # Mock QSS file reading
         mock_qss = """
-        QWidget {
-            background-color: #f0f0f0;
-        }
-        QPushButton {
-            padding: 5px;
-        }
+        QWidget { background-color: #f0f0f0; }
+        QPushButton { padding: 5px; }
         """
+        
+        # Mock database connection
+        self.mock_db_patcher = patch('sqlite3.connect')
+        self.mock_db = self.mock_db_patcher.start()
+        self.mock_cursor = MagicMock()
+        self.mock_db.return_value.cursor.return_value = self.mock_cursor
+        
+        # Mock initial user data
+        self.mock_cursor.fetchall.return_value = [
+            (1, "test@example.com"),
+            (2, "admin@example.com")
+        ]
+        
+        # Setup panel with mocks
         with patch('builtins.open', mock_open(read_data=mock_qss)):
-            # Setup AdminPanel widget
             self.panel = AdminPanel()
             qtbot.addWidget(self.panel)
-
-            # Mock DB connection
-            self.mock_db_patcher = patch('C:\Work\Projects\SE\ResolveHub\db.sqlite3.connect')
-            self.mock_db = self.mock_db_patcher.start()
-            self.mock_cursor = MagicMock()
-            self.mock_db.return_value.cursor.return_value = self.mock_cursor
-
-            # Mock current user ID from dropdown
-            self.panel.user_dropdown.currentData = lambda: 1  # Mock returning user ID '1'
-
-            yield
-
-            self.mock_db_patcher.stop()
-            self.panel.close()
+        
+        # Reset mock cursor after initialization
+        self.mock_cursor.reset_mock()
+        
+        yield
+        
+        # Cleanup
+        self.mock_db_patcher.stop()
+        self.panel.close()
 
     def test_assign_authority(self, qtbot, monkeypatch):
-        # Simulate user interaction with the "assign authority" form
-        self.mock_cursor.fetchone.return_value = None  # Simulate no existing authority
-        monkeypatch.setattr(QMessageBox, 'information', lambda *args: None)  # Mock info box
+        """Test assigning authority to a user"""
+        # Mock successful authority assignment
+        self.mock_cursor.fetchone.return_value = None  # No existing authority
+        monkeypatch.setattr(QMessageBox, 'information', lambda *args: None)
 
-        # Set dropdown and spinbox values for role and priority
-        self.panel.role_dropdown.setCurrentIndex(0)  # Assuming index 0 corresponds to "Maintenance"
+        # Set UI values
+        self.panel.user_dropdown.setCurrentIndex(0)  # First user
+        self.panel.role_dropdown.setCurrentIndex(0)  # First role
         self.panel.priority_spinbox.setValue(5)
 
-        # Simulate clicking the "Assign Authority" button
+        # Click assign button
         qtbot.mouseClick(self.panel.assign_button, Qt.LeftButton)
 
-        # Assert that the INSERT query is executed with the expected parameters
-        self.mock_cursor.execute.assert_any_call(
+        # Verify database interaction
+        self.mock_cursor.execute.assert_called_with(
             "INSERT INTO admin_panel_authority (user_id, role, priority) VALUES (?, ?, ?)",
             (1, "Maintenance", 5)
         )
 
     def test_assign_authority_invalid_user(self, qtbot, monkeypatch):
-        # Simulate user interaction with invalid user selection
-        self.panel.user_dropdown.clear()  # Clear the dropdown (no user selected)
+        """Test assigning authority with invalid user selection"""
+        # Reset mock cursor and setup warning
+        self.mock_cursor.reset_mock()
         warning_shown = False
-
-        # Mock warning message when no user is selected
         def mock_warning(*args):
             nonlocal warning_shown
             warning_shown = True
-
         monkeypatch.setattr(QMessageBox, 'warning', mock_warning)
 
-        # Simulate clicking the "Assign Authority" button
+        # Clear user dropdown and try to assign
+        self.panel.user_dropdown.clear()
         qtbot.mouseClick(self.panel.assign_button, Qt.LeftButton)
 
-        # Check that the warning was shown and no database query was executed
+        # Verify warning shown and no DB operations
         assert warning_shown
-        self.mock_cursor.execute.assert_not_called()
+        assert not self.mock_cursor.execute.called
 
     def test_delete_authority(self, qtbot, monkeypatch):
-        # Simulate deleting authority for an existing user
-        self.mock_cursor.fetchone.return_value = (1,)  # Simulate authority exists
-        monkeypatch.setattr(QMessageBox, 'information', lambda *args: None)  # Mock info box
+        """Test deleting an existing authority"""
+        # Mock existing authority
+        self.mock_cursor.fetchone.return_value = (1,)
+        monkeypatch.setattr(QMessageBox, 'information', lambda *args: None)
 
-        # Set the user ID input to '1'
+        # Set user ID and delete
         self.panel.user_id_input.setText("1")
         qtbot.mouseClick(self.panel.delete_button, Qt.LeftButton)
 
-        # Assert that the DELETE query is executed with the expected user ID
-        self.mock_cursor.execute.assert_any_call(
+        # Verify database interaction
+        self.mock_cursor.execute.assert_called_with(
             "DELETE FROM admin_panel_authority WHERE user_id=?",
             (1,)
         )
 
     def test_delete_authority_nonexistent(self, qtbot, monkeypatch):
-        # Simulate deleting authority for a nonexistent user
-        self.mock_cursor.fetchone.return_value = None  # Simulate no authority found
+        """Test deleting a nonexistent authority"""
+        # Reset mock cursor and setup responses
+        self.mock_cursor.reset_mock()
+        self.mock_cursor.fetchone.return_value = None
+        
+        # Setup warning mock
         warning_shown = False
-
-        # Mock warning message when no authority is found
         def mock_warning(*args):
             nonlocal warning_shown
             warning_shown = True
-
         monkeypatch.setattr(QMessageBox, 'warning', mock_warning)
 
-        # Set the user ID input to '999' (nonexistent user)
+        # Attempt to delete nonexistent authority
         self.panel.user_id_input.setText("999")
         qtbot.mouseClick(self.panel.delete_button, Qt.LeftButton)
 
-        # Check that the warning was shown and the correct SELECT query was executed
+        # Verify warning shown and correct DB query
         assert warning_shown
-        self.mock_cursor.execute.assert_called_once()  # Ensure SELECT query was called
-        assert "SELECT" in self.mock_cursor.execute.call_args[0][0]
+        self.mock_cursor.execute.assert_called_once_with(
+            "SELECT id FROM admin_panel_authority WHERE user_id=?", 
+            (999,)
+        )
